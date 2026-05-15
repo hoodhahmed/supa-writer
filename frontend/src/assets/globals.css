@@ -27,6 +27,9 @@
 
 body {
   @apply bg-background text-foreground;
+  font-feature-settings: "kern" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .writing-surface {
@@ -38,9 +41,61 @@ body {
 }
 
 .editor-typo {
-  @apply text-base leading-relaxed text-foreground;
+  @apply text-lg leading-relaxed text-foreground font-light;
+}
+
+.editor-typo h1 {
+  @apply text-4xl font-bold tracking-tight mt-8 mb-6 text-foreground;
+}
+
+.editor-typo h2 {
+  @apply text-2xl font-semibold tracking-tight mt-6 mb-4 text-foreground;
+}
+
+.editor-typo h3 {
+  @apply text-xl font-semibold tracking-tight mt-5 mb-3 text-foreground;
+}
+
+.editor-typo p {
+  @apply mb-4;
+}
+
+.editor-typo blockquote {
+  @apply border-l-4 border-accent/30 pl-6 italic text-foreground/80 my-4;
 }
 
 .highlight-pending-change {
-  @apply bg-yellow-100 rounded px-1;
+  @apply bg-accent/20 rounded px-1 transition-all duration-300 backdrop-blur-sm;
+  animation: pulse-highlight 0.6s ease-out;
+}
+
+@keyframes pulse-highlight {
+  0% {
+    background-color: rgba(10, 233, 255, 0.4);
+    transform: scaleX(1.05);
+  }
+  100% {
+    background-color: rgba(10, 233, 255, 0.2);
+    transform: scaleX(1);
+  }
+}
+
+@keyframes particle-burst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty))) scale(0.2);
+  }
+}
+
+/* Smooth transitions for UI elements */
+button {
+  @apply transition-all duration-200;
+}
+
+input, textarea {
+  @apply transition-all duration-200;
 }
