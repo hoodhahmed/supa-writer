@@ -1,0 +1,193 @@
+/* Notebook Editor Styles */
+
+.notebook-container {
+  @apply flex flex-col h-screen w-full bg-[#F5F5F5];
+}
+
+.notebook-canvas-wrapper {
+  @apply flex-1 bg-[#F5F5F5] overflow-hidden flex items-center justify-center py-12 px-8;
+}
+
+.notebook-paper {
+  @apply relative w-full max-w-3xl h-full bg-white rounded-2xl overflow-y-auto overflow-x-hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Ruled lines background - more visible */
+.notebook-lines {
+  @apply absolute inset-0 pointer-events-none rounded-2xl;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 31px,
+    #D9D9D9 31px,
+    #D9D9D9 32px
+  );
+}
+
+/* Pink vertical margin line */
+.notebook-margin {
+  @apply absolute top-0 left-12 h-full w-1 bg-[#F2CACA] pointer-events-none;
+}
+
+.notebook-margin {
+  opacity: 0.85;
+}
+
+/* Content area with proper padding */
+.notebook-content {
+  @apply relative z-10 px-12 py-12 h-full overflow-y-auto;
+}
+
+/* Editor editable area */
+.editor-canvas {
+  @apply focus:outline-none text-[#111111] w-full;
+}
+
+.editor-canvas {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'SF Pro Display', sans-serif;
+  min-height: 100%;
+  font-size: 16px;
+  line-height: 1.8;
+  letter-spacing: -0.3px;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.editor-canvas h1 {
+  @apply text-[48px] md:text-[56px] font-bold text-[#111111];
+}
+
+.editor-canvas h1 {
+  letter-spacing: -1.2px;
+  margin-top: 32px;
+  margin-bottom: 24px;
+}
+
+.editor-canvas h2 {
+  @apply text-[36px] font-bold text-[#111111];
+}
+
+.editor-canvas h2 {
+  letter-spacing: -0.8px;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+.editor-canvas h3 {
+  @apply text-[28px] font-bold text-[#111111];
+}
+
+.editor-canvas h3 {
+  letter-spacing: -0.6px;
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+.editor-canvas p {
+  @apply text-[#555555] font-normal;
+}
+
+.editor-canvas p {
+  margin-bottom: 16px;
+}
+
+.editor-canvas blockquote {
+  @apply border-l-4 border-[#33C3FF]/30 italic text-[#555555];
+}
+
+.editor-canvas blockquote {
+  padding-left: 24px;
+  margin: 16px 0;
+}
+
+/* Highlight pending changes */
+.highlight-pending-change {
+  @apply bg-[#33C3FF]/15 rounded px-1 transition-all duration-300;
+}
+
+.highlight-pending-change {
+  animation: pulse-highlight 0.6s ease-out;
+}
+
+@keyframes pulse-highlight {
+  0% {
+    background-color: rgba(51, 195, 255, 0.25);
+    transform: scaleX(1.05);
+  }
+  100% {
+    background-color: rgba(51, 195, 255, 0.15);
+    transform: scaleX(1);
+  }
+}
+
+/* Floating suggestion panel */
+.suggestion-panel {
+  @apply fixed bottom-32 left-1/2 -translate-x-1/2 bg-white rounded-2xl p-6 w-full max-w-md shadow-lg z-40;
+}
+
+.suggestion-panel {
+  border: 1px solid rgba(234, 234, 234, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+/* Save indicator */
+.save-indicator {
+  @apply flex items-center gap-2 text-xs font-medium text-[#10B981] px-3 py-2 bg-white rounded-full shadow-md;
+}
+
+.save-indicator {
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  animation: fade-in 0.3s ease-in-out;
+}
+
+.save-indicator svg {
+  @apply h-3.5 w-3.5;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+}
+
+.save-indicator.fading {
+  animation: fade-out 0.3s ease-in-out forwards;
+}
+
+/* Particle burst animation */
+@keyframes particle-burst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty))) scale(0.2);
+  }
+}
+
+/* Typography refinements */
+.editor-title-placeholder {
+  @apply text-[#CCCCCC] text-[48px] font-bold;
+}
+
+.editor-title-placeholder {
+  letter-spacing: -1.2px;
+}
