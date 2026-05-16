@@ -1,28 +1,40 @@
 import React from 'react';
-import { Sparkles, Sliders } from 'lucide-react';
+import { Sparkles, Sliders, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic } from 'lucide-react';
 
 interface Props {
   x: number;
   y: number;
   onHumanize: () => void;
-  onTone?: () => void;
+  onTone: (tone: string) => void;
+  selectedTone?: string;
   onClose?: () => void;
   disabled?: boolean;
 }
 
-export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }: Props) {
+export function FloatingToolbar({ x, y, onHumanize, onTone, selectedTone = 'Standard', onClose, disabled }: Props) {
+  const [showToneMenu, setShowToneMenu] = React.useState(false);
+  
+  const tones = [
+    { label: 'Standard', value: 'Standard' },
+    { label: 'Professional', value: 'Professional' },
+    { label: 'Academic', value: 'Academic' },
+    { label: 'Casual', value: 'Casual' },
+    { label: 'Creative', value: 'Creative' },
+    { label: 'Concise', value: 'Concise' },
+  ];
+
   const style: React.CSSProperties = {
     position: 'fixed',
     left: x,
     top: y,
     zIndex: 60,
-    background: '#1A1A1A',
+    background: '#333333',
     border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: 12,
     boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
     padding: '6px',
     display: 'flex',
-    gap: 4,
+    gap: 2,
     alignItems: 'center',
     color: '#FFFFFF',
   };
@@ -30,8 +42,9 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }:
   const btnBase: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    padding: '6px 12px',
+    padding: '6px 10px',
     borderRadius: 8,
     border: 'none',
     fontSize: 13,
@@ -52,22 +65,74 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }:
     flexShrink: 0,
   };
 
+  const applyFormat = (cmd: string) => {
+    document.execCommand(cmd, false);
+  };
+
   return (
     <div style={style} className="floating-toolbar" role="toolbar" aria-label="Selection toolbar">
       {/* Format group */}
-      <div style={{ display: 'flex', gap: 2 }}>
+      <div style={{ display: 'flex', gap: 1 }}>
         <button
           title="Bold"
-          style={{ ...btnBase, padding: '6px 10px', fontWeight: 700 }}
+          style={btnBase}
+          onClick={() => applyFormat('bold')}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; }}
-        >B</button>
+        >
+          <Bold size={14} />
+        </button>
         <button
           title="Italic"
-          style={{ ...btnBase, padding: '6px 10px', fontStyle: 'italic' }}
+          style={btnBase}
+          onClick={() => applyFormat('italic')}
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; }}
-        >I</button>
+        >
+          <Italic size={14} />
+        </button>
+      </div>
+
+      <div style={divider} />
+
+      {/* Justification Group */}
+      <div style={{ display: 'flex', gap: 1 }}>
+        <button
+          title="Align Left"
+          style={btnBase}
+          onClick={() => applyFormat('justifyLeft')}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; }}
+        >
+          <AlignLeft size={14} />
+        </button>
+        <button
+          title="Align Center"
+          style={btnBase}
+          onClick={() => applyFormat('justifyCenter')}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; }}
+        >
+          <AlignCenter size={14} />
+        </button>
+        <button
+          title="Align Right"
+          style={btnBase}
+          onClick={() => applyFormat('justifyRight')}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; }}
+        >
+          <AlignRight size={14} />
+        </button>
+        <button
+          title="Justify"
+          style={btnBase}
+          onClick={() => applyFormat('justifyFull')}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; }}
+        >
+          <AlignJustify size={14} />
+        </button>
       </div>
 
       <div style={divider} />
@@ -76,7 +141,7 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }:
       <button
         onClick={onHumanize}
         disabled={disabled}
-        title="Humanize selected text"
+        title={`Humanize selected text as ${selectedTone}`}
         style={{
           ...btnBase,
           background: disabled ? 'rgba(51, 195, 255, 0.5)' : '#33C3FF',
@@ -89,23 +154,67 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }:
         onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#33C3FF'; e.currentTarget.style.transform = 'translateY(0)'; } }}
       >
         <Sparkles size={14} strokeWidth={2.5} />
-        Humanize
+        {selectedTone === 'Standard' ? 'Humanize' : `Write as ${selectedTone}`}
       </button>
 
       {/* Tone */}
-      <button
-        onClick={onTone}
-        disabled={disabled}
-        title="Change tone"
-        style={{
-          ...btnBase,
-        }}
-        onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; } }}
-        onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; } }}
-      >
-        <Sliders size={14} strokeWidth={2} />
-        Tone
-      </button>
+      <div style={{ position: 'relative' }}>
+        <button
+          onClick={() => setShowToneMenu(!showToneMenu)}
+          disabled={disabled}
+          title="Change tone"
+          style={{
+            ...btnBase,
+            background: showToneMenu ? 'rgba(255,255,255,0.1)' : 'transparent',
+            color: showToneMenu ? '#FFFFFF' : '#E5E7EB',
+          }}
+          onMouseEnter={e => { if (!disabled && !showToneMenu) { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; } }}
+          onMouseLeave={e => { if (!disabled && !showToneMenu) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; } }}
+        >
+          <Sliders size={14} strokeWidth={2} />
+          Tone
+        </button>
+
+        {showToneMenu && (
+          <div style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%) translateY(-8px)',
+            background: '#333333',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 10,
+            padding: '4px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            minWidth: 120,
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)',
+          }}>
+            {tones.map(t => (
+              <button
+                key={t.value}
+                onClick={() => {
+                  onTone(t.value);
+                  setShowToneMenu(false);
+                }}
+                style={{
+                  ...btnBase,
+                  textAlign: 'left',
+                  padding: '6px 10px',
+                  width: '100%',
+                  background: selectedTone === t.value ? 'rgba(51, 195, 255, 0.15)' : 'transparent',
+                  color: selectedTone === t.value ? '#33C3FF' : '#E5E7EB',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = selectedTone === t.value ? 'rgba(51, 195, 255, 0.15)' : 'transparent'; }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div style={divider} />
 

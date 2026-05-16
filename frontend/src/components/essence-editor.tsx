@@ -49,6 +49,8 @@ export function EssenceEditor() {
     setToolbarPos,
     isHumanizing,
     setIsHumanizing,
+    selectedTone,
+    setSelectedTone,
     particleEffect,
     setParticleEffect
   } = useEditor();
@@ -95,10 +97,48 @@ export function EssenceEditor() {
 
   const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
+    const html = e.clipboardData.getData('text/html');
     const text = e.clipboardData.getData('text/plain');
-    document.execCommand('insertText', false, text);
+
+    if (html) {
+      // Clean up junk but keep semantic tags AND alignment styles
+      const cleanHtml = html
+        .replace(/<o:p>.*?<\/o:p>/g, '') // remove office tags
+        .replace(/(?:style|class)="[^"]*"/g, (match) => {
+          // Keep text-align in style attribute
+          if (match.includes('text-align')) {
+            const alignMatch = match.match(/text-align\s*:\s*([^;"]+)/);
+            if (alignMatch) return `style="text-align: ${alignMatch[1]}"`;
+          }
+          return ''; // strip everything else
+        })
+        .replace(/<span[^>]*>/g, '') // remove spans
+        .replace(/<\/span>/g, '');
+
+      document.execCommand('insertHTML', false, cleanHtml);
+    } else {
+      document.execCommand('insertText', false, text);
+    }
     handleInput();
   };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleInput(); // triggers save
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        // Browser handles native undo in contentEditable, 
+        // but we ensure it doesn't trigger other app-level behaviors.
+        // If we needed custom undo stack, we'd implement it here.
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleInput]);
 
   const handleSelection = useCallback(() => {
     // Don't clear selection while suggestion panel is active to prevent unmounting it
@@ -148,7 +188,7 @@ export function EssenceEditor() {
 
     setIsHumanizing(true);
     try {
-      const result = await api.humanizeText(selectedText);
+      const result = await api.humanizeText(selectedText, selectedTone);
       const humanizedText = result?.humanizedText?.trim() || selectedText;
       const wh_score = result?.score ?? null;
 
@@ -164,7 +204,7 @@ export function EssenceEditor() {
     } finally {
       setIsHumanizing(false);
     }
-  }, [editorSelection, isHumanizing, setIsHumanizing]);
+  }, [editorSelection, isHumanizing, selectedTone]);
 
   // keep suggestion panel visibility in sync: hide when there are no versions or no selection
   useEffect(() => {
@@ -218,7 +258,7 @@ export function EssenceEditor() {
     if (!base) return;
     setIsHumanizing(true);
     try {
-      const result = await api.humanizeText(base.text);
+      const result = await api.humanizeText(base.text, selectedTone);
       const humanizedText = result?.humanizedText?.trim() || base.text;
       const wh_score = result?.score ?? null;
 
@@ -232,7 +272,7 @@ export function EssenceEditor() {
     } finally {
       setIsHumanizing(false);
     }
-  }, [versions, setIsHumanizing]);
+  }, [versions, selectedTone]);
 
   const prevVersion = useCallback(() => {
     setVersionIndex((i: number) => Math.max(0, i - 1));
@@ -285,7 +325,8 @@ export function EssenceEditor() {
               x={toolbarPos.x}
               y={toolbarPos.y}
               onHumanize={() => { void handleHumanize(); }}
-              onTone={() => { /* tone handler placeholder */ }}
+              onTone={(tone: string) => setSelectedTone(tone)}
+              selectedTone={selectedTone}
               onClose={() => { setEditorSelection(''); setToolbarPos(null); }}
               disabled={isHumanizing}
             />
