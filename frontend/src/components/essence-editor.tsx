@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, type ComponentType } from 'react';
+import { useState, useRef, useCallback, useEffect, type ClipboardEvent, type ComponentType } from 'react';
 import { ParticleEffect } from '@/components/particle-effect';
 
 import '@/assets/editor.css';
@@ -77,7 +77,7 @@ export function EssenceEditor() {
     }, 1500);
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+  const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
     document.execCommand('insertText', false, text);
@@ -89,13 +89,15 @@ export function EssenceEditor() {
     if (sel && sel.toString().trim().length > 0) {
       const range = sel.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      editorUI.setToolbarPos({ x: rect.left + rect.width / 2, y: rect.top - 60 });
+      editorUI.setToolbarPos({ x: rect.left + rect.width / 2, y: rect.top });
       editorUI.setSelection(sel.toString());
     } else {
       editorUI.setToolbarPos(null);
       editorUI.setSelection('');
     }
   };
+
+  type Version = { text: string; score?: number | null };
 
   const handleHumanize = useCallback(async () => {
     if (!editorRef.current || editorUI.isHumanizing) return;
@@ -117,7 +119,7 @@ export function EssenceEditor() {
       const wh_score = result?.score ?? null;
 
       // push to versions and open suggestion panel
-      setVersions((prev) => {
+      setVersions((prev: Version[]) => {
         const next = [{ text: humanizedText, score: wh_score }, ...prev];
         return next.slice(0, 8);
       });
@@ -131,7 +133,7 @@ export function EssenceEditor() {
   }, [editorUI, handleInput]);
 
   // Suggestion/version state
-  const [versions, setVersions] = useState<{ text: string; score?: number | null }[]>([]);
+  const [versions, setVersions] = useState<Version[]>([]);
   const [versionIndex, setVersionIndex] = useState(0);
   const [showSuggestionPanel, setShowSuggestionPanel] = useState(false);
 
@@ -191,7 +193,7 @@ export function EssenceEditor() {
       const humanizedText = result?.humanizedText?.trim() || base.text;
       const wh_score = result?.score ?? null;
 
-      setVersions((prev) => {
+      setVersions((prev: Version[]) => {
         const next = [{ text: humanizedText, score: wh_score }, ...prev];
         return next.slice(0, 8);
       });
@@ -204,11 +206,11 @@ export function EssenceEditor() {
   }, [versions, editorUI]);
 
   const prevVersion = useCallback(() => {
-    setVersionIndex((i) => Math.max(0, i - 1));
+    setVersionIndex((i: number) => Math.max(0, i - 1));
   }, []);
 
   const nextVersion = useCallback(() => {
-    setVersionIndex((i) => Math.min(versions.length - 1, i + 1));
+    setVersionIndex((i: number) => Math.min(versions.length - 1, i + 1));
   }, [versions.length]);
 
   
@@ -258,6 +260,7 @@ export function EssenceEditor() {
               x={editorUI.toolbarPos.x}
               y={editorUI.toolbarPos.y}
               onHumanize={() => { void handleHumanize(); }}
+              onTone={() => { /* tone handler placeholder */ }}
               onClose={() => { editorUI.setSelection(''); editorUI.setToolbarPos(null); }}
               disabled={editorUI.isHumanizing}
             />

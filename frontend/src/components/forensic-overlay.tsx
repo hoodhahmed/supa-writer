@@ -7,7 +7,7 @@ interface Sentence {
 
 interface ForensicOverlayProps {
   sentences?: Sentence[];
-  editorRef?: React.RefObject<HTMLDivElement | null>;
+  editorRef?: React.ForwardedRef<HTMLDivElement>;
 }
 
 export function ForensicOverlay(_props: ForensicOverlayProps): React.ReactNode {

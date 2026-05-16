@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, type ComponentType, type FC, type PropsWithChildren } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -7,7 +7,6 @@ import {
   Sparkles,
   Zap,
   Shield,
-  Layers3,
   PenTool,
   Menu,
   X,
@@ -17,7 +16,7 @@ type Feature = {
   id: string;
   title: string;
   description: string;
-  Icon: React.ComponentType<any>;
+  Icon: ComponentType<any>;
 };
 
 const features: Feature[] = [
@@ -122,7 +121,7 @@ const tiers: Tier[] = [
   },
 ];
 
-export const SiteShell: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+export const SiteShell: FC<PropsWithChildren<{}>> = ({ children }) => {
   const [open, setOpen] = useState(false);
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-[#111111] relative overflow-hidden">
@@ -201,7 +200,7 @@ export const SiteShell: React.FC<React.PropsWithChildren<{}>> = ({ children }) =
   );
 };
 
-export const LandingPage: React.FC = () => {
+export const LandingPage: FC = () => {
   return (
     <SiteShell>
       <section className="text-center py-12 max-w-4xl mx-auto">
@@ -338,7 +337,7 @@ export const LandingPage: React.FC = () => {
   );
 };
 
-export const AboutPage: React.FC = () => {
+export const AboutPage: FC = () => {
   return (
     <SiteShell>
       <div className="space-y-6">
@@ -365,7 +364,7 @@ export const AboutPage: React.FC = () => {
   );
 };
 
-export const PricingPage: React.FC = () => {
+export const PricingPage: FC = () => {
   return (
     <SiteShell>
       <section>
