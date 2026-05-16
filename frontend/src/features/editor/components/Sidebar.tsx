@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 export function Sidebar({
   documents,
   currentDocId,
-  onCreate,
   onDelete,
   onSelect,
 }: any) {
@@ -50,13 +49,13 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Tabs: My Napkins / Recent */}
+      {/* Tabs: My drafts / Recent */}
       <div className="napkin-sidebar-tabs">
         <button
           className={cn('napkin-sidebar-tab', activeTab === 'my' && 'napkin-sidebar-tab-active')}
           onClick={() => setActiveTab('my')}
         >
-          My Napkins
+          My drafts
         </button>
         <button
           className={cn('napkin-sidebar-tab', activeTab === 'recent' && 'napkin-sidebar-tab-active')}

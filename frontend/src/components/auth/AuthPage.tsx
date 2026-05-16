@@ -45,7 +45,7 @@ export function AuthPage() {
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
-          <span className="auth-logo-text">SupaWriter</span>
+          <span className="auth-logo-text">Supa Write</span>
         </div>
 
         <h1 className="auth-title">
@@ -54,7 +54,7 @@ export function AuthPage() {
         <p className="auth-subtitle">
           {mode === 'signin'
             ? 'Sign in to continue writing'
-            : 'Start writing human-authentic content'}
+            : 'Start shaping clear, on-brand copy'}
         </p>
 
         <form onSubmit={handleSubmit} className="auth-form">

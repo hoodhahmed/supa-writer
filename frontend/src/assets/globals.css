@@ -4,28 +4,89 @@
 
 :root {
   /* Notebook Premium Palette */
-  --background: #F5F5F5;
-  --paper: #FFFFFF;
-  --foreground: #111111;
-  --secondary: #555555;
+  --background: #ffffff;
+  --paper: #ffffff;
+  --foreground: #2c2f31;
+  --secondary: #5e6266;
   --accent: #33C3FF;
-  --border: #EAEAEA;
+  --border: #f0f4f7;
   --notebook-lines: #EFEFEF;
   --notebook-margin: #F2CACA;
   --success: #10B981;
 
+  /* Primary Action Colors */
+  --primary-btn-bg: #30363c;
+  --primary-btn-hover: #000000;
+  --primary-btn-text: #ffffff;
+
+  /* Secondary Action Colors */
+  --secondary-btn-bg: #eaeff2;
+  --secondary-btn-hover: #d4dae0;
+  --secondary-btn-text: #2c2f31;
+
+  /* Surface & Container Colors */
+  --surface-light: #f0f4f7;
+  --surface-hover: #e9eff4;
+  --surface-expanded: #dee4e9;
+
+  /* Borders & Separators */
+  --separator-border: #f0f4f7;
+  --footer-border: #e4eaed;
+
+  /* Toggle Colors */
+  --toggle-on: #30363c;
+  --toggle-off: #667481;
+  --toggle-knob: #ffffff;
+
+  /* Modal Overlay */
+  --modal-overlay: rgba(0, 0, 0, 0.65);
+
   /* Legacy CSS vars for compatibility */
-  --primary: #33C3FF;
-  --primary-foreground: #FFFFFF;
-  --secondary-foreground: #111111;
+  --primary: #30363c;
+  --primary-foreground: #ffffff;
+  --secondary-foreground: #2c2f31;
   --accent-foreground: #000000;
   --destructive: #FF3B30;
   --destructive-foreground: #FFFFFF;
-  --muted: #F5F5F5;
-  --muted-foreground: #555555;
-  --ring: #33C3FF;
-  --popover: #FFFFFF;
-  --popover-foreground: #111111;
+  --muted: #f0f4f7;
+  --muted-foreground: #5e6266;
+  --ring: #30363c;
+  --popover: #ffffff;
+  --popover-foreground: #2c2f31;
+}
+
+/* Local font faces (Geomanist) */
+@font-face {
+  font-family: 'Geomanist';
+  src: url('./fonts/geomanist-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geomanist';
+  src: url('./fonts/geomanist-medium.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geomanist';
+  src: url('./fonts/geomanist-book.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Geomanist';
+  src: url('./fonts/geomanist-regular-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --font-sans: 'Geomanist', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 
 * {
@@ -34,6 +95,7 @@
 
 body {
   @apply bg-background text-foreground;
+  font-family: var(--font-sans);
   font-feature-settings: "kern" 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -42,6 +104,23 @@ body {
 /* Smooth transitions for UI elements */
 button {
   @apply transition-all duration-200;
+}
+
+/* Dot grid background used on marketing pages */
+.dot-grid {
+  width: 100%;
+  height: 100%;
+  background-color: rgb(229, 231, 235);
+  background-image: radial-gradient(circle, rgb(100, 100, 100) 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+  opacity: 1;
+}
+
+/* Hero highlight */
+.hero-highlight {
+  background: #eaeff2;
+  padding: 0 0.25rem;
+  border-radius: 2px;
 }
 
 input, textarea {
@@ -60,14 +139,14 @@ input, textarea {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background-color: #F4F8FB;
+  background-color: #ffffff;
 }
 
 /* Dot grid background */
 .auth-bg-dots {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(52, 195, 235, 0.50) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(44, 47, 49, 0.1) 1px, transparent 1px);
   background-size: 18px 18px;
   pointer-events: none;
 }
@@ -82,7 +161,37 @@ input, textarea {
   width: 100%;
   max-width: 420px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
-  border: 1px solid rgba(232, 232, 232, 0.8);
+  border: 1px solid #e4eaed;
+}
+
+/* Mobile auth card adjustments */
+@media (max-width: 640px) {
+  .auth-card {
+    margin: 0 16px;
+    padding: 32px 24px;
+    border-radius: 12px;
+  }
+
+  .auth-page {
+    padding: 20px 0;
+  }
+
+  .auth-title {
+    font-size: 20px;
+  }
+
+  .auth-subtitle {
+    font-size: 13px;
+  }
+
+  .auth-input,
+  .auth-submit-btn {
+    font-size: 16px;
+  }
+
+  .auth-form {
+    gap: 14px;
+  }
 }
 
 /* Logo */
@@ -108,7 +217,7 @@ input, textarea {
   font-family: 'Geomanist', sans-serif;
   font-size: 17px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: #2c2f31;
   letter-spacing: -0.3px;
 }
 
@@ -117,7 +226,7 @@ input, textarea {
   font-family: 'Geomanist', sans-serif;
   font-size: 22px;
   font-weight: 600;
-  color: #1A1A1A;
+  color: #2c2f31;
   letter-spacing: -0.5px;
   margin: 0 0 6px;
 }
@@ -125,7 +234,7 @@ input, textarea {
 .auth-subtitle {
   font-family: 'Geomanist', sans-serif;
   font-size: 14px;
-  color: #888888;
+  color: #5e6266;
   margin: 0 0 28px;
   letter-spacing: -0.1px;
 }
@@ -147,16 +256,16 @@ input, textarea {
   font-family: 'Geomanist', sans-serif;
   font-size: 12.5px;
   font-weight: 500;
-  color: #555555;
+  color: #5e6266;
   letter-spacing: -0.1px;
 }
 
 .auth-input {
   font-family: 'Geomanist', sans-serif;
   font-size: 14px;
-  color: #1A1A1A;
-  background: #FAFAFA;
-  border: 1px solid #E8E8E8;
+  color: #2c2f31;
+  background: #fafafa;
+  border: 1px solid #e4eaed;
   border-radius: 8px;
   padding: 10px 14px;
   outline: none;
@@ -164,11 +273,11 @@ input, textarea {
   width: 100%;
 }
 .auth-input:focus {
-  border-color: #1AABF0;
-  box-shadow: 0 0 0 3px rgba(26, 171, 240, 0.12);
+  border-color: #30363c;
+  box-shadow: 0 0 0 3px rgba(48, 54, 60, 0.12);
   background: #FFFFFF;
 }
-.auth-input::placeholder { color: #BBBBBB; }
+.auth-input::placeholder { color: #a8aeb5; }
 
 /* Messages */
 .auth-error {
@@ -196,8 +305,8 @@ input, textarea {
   font-family: 'Geomanist', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #FFFFFF;
-  background: #1A1A1A;
+  color: #ffffff;
+  background: #30363c;
   border: none;
   border-radius: 8px;
   padding: 11px 20px;
@@ -207,7 +316,7 @@ input, textarea {
   transition: background 0.15s, opacity 0.15s;
   margin-top: 4px;
 }
-.auth-submit-btn:hover:not(:disabled) { background: #333333; }
+.auth-submit-btn:hover:not(:disabled) { background: #000000; }
 .auth-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Switch mode */
@@ -222,7 +331,7 @@ input, textarea {
 .auth-switch-btn {
   background: none;
   border: none;
-  color: #1AABF0;
+  color: #30363c;
   font-family: 'Geomanist', sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -231,7 +340,7 @@ input, textarea {
   margin-left: 4px;
   transition: color 0.12s;
 }
-.auth-switch-btn:hover { color: #0d95d8; text-decoration: underline; }
+.auth-switch-btn:hover { color: #000000; text-decoration: underline; }
 
 /* Loading spinner */
 .auth-spinner {
@@ -245,4 +354,130 @@ input, textarea {
 
 @keyframes spinner-rotate {
   to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   RESPONSIVE DESIGN - MARKETING & DASHBOARD
+   ============================================================ */
+
+/* Tablet and mobile adjustments for marketing pages */
+@media (max-width: 768px) {
+  .dot-grid {
+    background-size: 20px 20px;
+  }
+
+  header {
+    padding: 12px 16px !important;
+  }
+
+  main {
+    padding: 12px 16px !important;
+  }
+
+  /* Hero section responsive */
+  .hero-highlight {
+    display: inline;
+  }
+}
+
+/* Mobile breakpoint (640px and below) */
+@media (max-width: 640px) {
+  /* Dashboard */
+  .dashboard-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Marketing pages */
+  header {
+    padding: 12px 12px !important;
+  }
+
+  header nav {
+    display: none;
+  }
+
+  header .flex {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  main {
+    padding: 12px 12px !important;
+  }
+
+  /* Pricing cards */
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Feature grid */
+  .feature-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  /* Buttons responsive */
+  .button {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  /* Text sizing for mobile */
+  h1 {
+    font-size: 28px !important;
+    line-height: 1.2 !important;
+  }
+
+  h2 {
+    font-size: 20px !important;
+  }
+
+  h3 {
+    font-size: 16px !important;
+  }
+
+  p {
+    font-size: 14px !important;
+  }
+
+  /* Dot grid tighter on mobile */
+  .dot-grid {
+    background-size: 16px 16px;
+  }
+
+  /* Auth page mobile */
+  .auth-page {
+    min-height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+}
+
+/* Ultra-small mobile (480px and below) */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 24px !important;
+  }
+
+  h2 {
+    font-size: 18px !important;
+  }
+
+  .button {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .dot-grid {
+    background-size: 14px 14px;
+  }
 }

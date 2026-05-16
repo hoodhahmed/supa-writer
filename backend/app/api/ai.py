@@ -43,6 +43,7 @@ async def get_ai_score(input_data: AIScoreInput):
                 json={"text": input_data.documentText},
                 timeout=30.0
             )
+            print(response.status_code, response.text)  # Debug log for response
             response.raise_for_status()
             try:
                 result = response.json()

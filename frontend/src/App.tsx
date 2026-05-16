@@ -3,6 +3,8 @@ import { EssenceEditor } from '@/components/essence-editor';
 import { AuthPage } from '@/components/auth/AuthPage';
 import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/services/useAuth';
+import { LandingPage, AboutPage, PricingPage } from '@/components/marketing/site-pages';
+import Dashboard from './components/dashboard/Dashboard';
 
 function AppRoutes() {
   const { token, loading } = useAuth();
@@ -21,12 +23,16 @@ function AppRoutes() {
       {/* Public: sign-in / sign-up page */}
       <Route
         path="/auth"
-        element={token ? <Navigate to="/" replace /> : <AuthPage />}
+        element={token ? <Navigate to="/app" replace /> : <AuthPage />}
       />
+
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
 
       {/* Protected: editor — redirect to /auth if not signed in */}
       <Route
-        path="/"
+        path="/app"
         element={
           token ? (
             <main className="h-screen w-screen bg-background">
@@ -36,6 +42,25 @@ function AppRoutes() {
             <Navigate to="/auth" replace />
           )
         }
+      />
+
+      {/* Dashboard */}
+      <Route
+        path="/dashboard"
+        element={
+          token ? (
+            <main className="h-screen w-screen bg-background">
+              <Dashboard />
+            </main>
+          ) : (
+            <Navigate to="/auth" replace />
+          )
+        }
+      />
+
+      <Route
+        path="/editor"
+        element={<Navigate to="/app" replace />}
       />
 
       {/* Catch-all */}

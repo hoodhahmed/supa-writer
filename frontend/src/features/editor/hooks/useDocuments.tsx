@@ -11,18 +11,22 @@ export interface Document {
 export function useDocuments() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     const loadData = async () => {
+      setLoading(true);
       try {
         const docs = await api.getDocuments();
         if (!mounted) return;
         setDocuments(docs);
         if (docs.length > 0 && !currentDocId) setCurrentDocId(docs[0].id);
-        if (docs.length === 0) createNewDoc();
+        if (docs.length === 0) await createNewDoc();
       } catch (error) {
         console.error('Failed to load documents', error);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     loadData();
@@ -35,7 +39,7 @@ export function useDocuments() {
     const content = contentRef.innerHTML;
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = content;
-    const h1 = tempDiv.querySelector('h1')?.innerText || 'Untitled Project';
+    const h1 = tempDiv.querySelector('h1')?.innerText || 'Supa Write draft';
 
     const updatedDoc = { id, title: h1, content, lastModified: Date.now() } as Document;
 
@@ -55,8 +59,8 @@ export function useDocuments() {
   const createNewDoc = useCallback(async () => {
     const newDoc: Document = {
       id: Math.random().toString(36).substring(7),
-      title: 'Untitled Project',
-      content: '<h1>Untitled</h1><p>Start writing human-authentic content...</p>',
+      title: 'Supa Write draft',
+      content: '<h1>Supa Write</h1><p>Turn rough notes, AI drafts, and plain text into clean, natural copy that still sounds like you.</p><h2>What it fixes</h2><p>It smooths rhythm, trims repetition, and keeps the meaning intact so the result reads confidently across product copy, emails, and long-form writing.</p><h2>Best for</h2><p>Use Supa Write when you need polished drafts for blogs, reports, landing pages, and everyday communication.</p>',
       lastModified: Date.now()
     };
     setDocuments((prev: Document[]) => [newDoc, ...prev]);
@@ -75,6 +79,7 @@ export function useDocuments() {
     documents,
     currentDocId,
     setCurrentDocId,
+    loading,
     createNewDoc,
     deleteDoc,
     saveCurrentDoc,
