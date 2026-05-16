@@ -1,79 +1,65 @@
 import { Button } from '@/components/ui/button';
-import { Library, Plus, Share2, Settings, HelpCircle, LogOut } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Share2, Settings, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { useAuth } from '@/services/useAuth';
 
-export function NotebookHeader() {
+interface NotebookHeaderProps {
+  onCreate?: () => unknown;
+}
+
+export function NotebookHeader({ onCreate }: NotebookHeaderProps) {
   const [openAuth, setOpenAuth] = useState(false);
   const { token, signout } = useAuth();
 
   return (
-    <header className="h-16 border-b border-[#EAEAEA] bg-white flex items-center justify-between px-8 sticky top-0 z-40">
+    <header className="napkin-header">
       {/* Left section */}
-      <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs font-medium text-[#555555] hover:text-[#111111] hover:bg-[#F5F5F5]"
-        >
-          <Library className="h-4 w-4 mr-2" />
-          Library
-        </Button>
-        <Button 
-          className="bg-[#111111] hover:bg-[#333333] text-white rounded-full px-4 py-2 text-sm font-semibold transition-all"
-        >
-          <Plus className="h-4 w-4 mr-2" />
+      <div className="napkin-header-left">
+        <button className="napkin-new-btn" onClick={() => { void onCreate?.(); }}>
+          <span className="napkin-new-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </span>
           New Napkin
-        </Button>
+        </button>
       </div>
 
-      {/* Center - spacer */}
-      <div className="flex-1" />
-
       {/* Right section */}
-      <div className="flex items-center gap-6">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs font-medium text-[#555555] hover:text-[#111111] gap-2"
-        >
-          <Share2 className="h-4 w-4" />
-          Share
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-xs font-medium text-[#555555] hover:text-[#111111]"
-        >
-          Brand Studio
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8 text-[#555555] hover:text-[#111111] hover:bg-[#F5F5F5]"
-        >
-          <Settings className="h-4 w-4" />
-        </Button>
+      <div className="napkin-header-right">
+        <button className="napkin-header-action-btn">
+          <Share2 size={14} />
+          <span>Share</span>
+        </button>
+
+        <button className="napkin-header-action-btn napkin-brand-studio-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          <span>Brand Studio</span>
+        </button>
+
+        <button className="napkin-icon-btn" title="Settings">
+          <Settings size={15} />
+        </button>
+
         <div className="relative">
           {!token ? (
-            <Button onClick={() => setOpenAuth(true)} variant="ghost" size="sm">
+            <button onClick={() => setOpenAuth(true)} className="napkin-signin-btn">
               Sign in
-            </Button>
+            </button>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#33C3FF] to-[#0099CC] flex items-center justify-center text-white text-xs font-bold">
-                U
-              </div>
-              <Button variant="ghost" size="icon" onClick={() => signout()}>
-                <LogOut className="h-4 w-4" />
+              <button className="napkin-avatar" title="Profile">U</button>
+              <Button variant="ghost" size="icon" onClick={() => signout()} className="h-7 w-7 text-[#888]">
+                <LogOut size={14} />
               </Button>
             </div>
           )}
 
           {openAuth && (
-            <div className="absolute right-0 mt-2">
+            <div className="absolute right-0 top-full mt-2 z-50">
               <SignInForm onClose={() => setOpenAuth(false)} />
             </div>
           )}

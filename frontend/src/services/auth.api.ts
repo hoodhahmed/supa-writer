@@ -1,5 +1,9 @@
 import apiClient, { setAuthToken } from '@/services/clients/apiClient';
 
+function notifyAuthChanged() {
+  window.dispatchEvent(new Event('supawriter-auth-changed'));
+}
+
 export const authApi = {
   signup: async (email: string, password: string) => {
     const res = await apiClient.post('/auth/signup', { email, password });
@@ -15,6 +19,7 @@ export const authApi = {
         localStorage.setItem('supawriter_token', data.access_token);
         if (data.refresh_token) localStorage.setItem('supawriter_refresh', data.refresh_token);
       } catch (_) {}
+      notifyAuthChanged();
     }
     return data;
   },
@@ -23,5 +28,6 @@ export const authApi = {
     setAuthToken(undefined);
     try { localStorage.removeItem('supawriter_token'); } catch (_) {}
     try { localStorage.removeItem('supawriter_refresh'); } catch (_) {}
+    notifyAuthChanged();
   }
 };
