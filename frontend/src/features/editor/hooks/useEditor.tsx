@@ -6,6 +6,7 @@ export function useEditor() {
   const [suggestionScore, setSuggestionScore] = useState<number | null>(null);
   const [toolbarPos, setToolbarPos] = useState<{ x: number; y: number } | null>(null);
   const [isHumanizing, setIsHumanizing] = useState(false);
+  const [selectedTone, setSelectedTone] = useState<string>('Standard');
   const [particleEffect, setParticleEffect] = useState<{ text: string; x: number; y: number } | null>(null);
 
   return {
@@ -19,6 +20,8 @@ export function useEditor() {
     setToolbarPos,
     isHumanizing,
     setIsHumanizing,
+    selectedTone,
+    setSelectedTone,
     particleEffect,
     setParticleEffect,
   } as const;

@@ -4,13 +4,15 @@ import { useState } from 'react';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/services/useAuth';
+import { SaveStatus } from './SaveStatus';
 
 interface NotebookHeaderProps {
   onCreate?: () => unknown;
   docScore?: any;
+  saved?: boolean;
 }
 
-export function NotebookHeader({ onCreate, docScore }: NotebookHeaderProps) {
+export function NotebookHeader({ onCreate, docScore, saved }: NotebookHeaderProps) {
   const [openAuth, setOpenAuth] = useState(false);
   const { token, signout } = useAuth();
 
@@ -20,16 +22,20 @@ export function NotebookHeader({ onCreate, docScore }: NotebookHeaderProps) {
       <div className="napkin-header-left">
         <button
           aria-label="Create document"
-          className="inline-flex items-center gap-2 bg-[#33C3FF] text-white px-3 py-2 rounded-md shadow-sm hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#33C3FF]"
+          className="napkin-new-btn"
           onClick={() => { void onCreate?.(); }}
         >
-          <span className="napkin-new-icon inline-flex items-center" aria-hidden>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <span className="napkin-new-icon" aria-hidden>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14"/>
             </svg>
           </span>
-          Create Document
+          <span>New Document</span>
         </button>
+        
+        <div style={{ marginLeft: '12px', opacity: 0.8 }}>
+          <SaveStatus saved={saved ?? true} />
+        </div>
       </div>
 
       {/* Right section */}
@@ -72,7 +78,9 @@ export function NotebookHeader({ onCreate, docScore }: NotebookHeaderProps) {
             </button>
           ) : (
               <div className="flex items-center gap-2">
-              <button className="napkin-avatar" title="Profile" aria-label="Profile" aria-haspopup="true">U</button>
+              <Link to="/profile" className="napkin-avatar focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#33C3FF]" title="Profile" aria-label="Profile">
+                U
+              </Link>
               <Button variant="ghost" size="icon" onClick={() => signout()} className="h-7 w-7 text-[#888] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#33C3FF]" aria-label="Sign out">
                 <LogOut size={14} />
               </Button>

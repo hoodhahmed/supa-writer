@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface Version {
   text: string;
-  score?: number | null; // wh_score from backend
+  score?: number | null;
 }
 
 interface SuggestionPanelProps {
@@ -19,16 +18,15 @@ interface SuggestionPanelProps {
 
 function computeAIScore(wh_score?: number | null) {
   if (wh_score == null) return null;
-  // AI score = (1 - wh_score) * 100
   const pct = Math.round((1 - wh_score) * 100);
   return Math.min(100, Math.max(0, pct));
 }
 
 function scoreColor(score: number | null) {
   if (score == null) return '#999999';
-  if (score >= 70) return '#FF3B30'; // red
-  if (score <= 30) return '#10B981'; // green
-  return '#F59E0B'; // yellow
+  if (score >= 70) return '#FF3B30';
+  if (score <= 30) return '#10B981';
+  return '#F59E0B';
 }
 
 export function SuggestionPanel({ versions, index, onApply, onReject, onRegenerate, onPrev, onNext }: SuggestionPanelProps) {
@@ -36,56 +34,50 @@ export function SuggestionPanel({ versions, index, onApply, onReject, onRegenera
   const aiScore = computeAIScore(current?.score ?? null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
-  // position state
+
+  // Smaller default size
+  const DEFAULT_W = 620;
+  const DEFAULT_H = 190;
+
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
-  // resize state
   const resizingRef = useRef(false);
-  const [size, setSize] = useState<{ width: number; height: number }>({ width: 760, height: 220 });
-  const startRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: 760, height: 220 });
+  const [size, setSize] = useState<{ width: number; height: number }>({ width: DEFAULT_W, height: DEFAULT_H });
+  const startRef = useRef({ x: 0, y: 0, left: 0, top: 0, width: DEFAULT_W, height: DEFAULT_H });
 
   useEffect(() => {
-    // initialize center bottom position if not set
     if (pos == null) {
       const w = window.innerWidth;
       const h = window.innerHeight;
-      setPos({ left: Math.round(w / 2 - size.width / 2), top: Math.round(h - (size.height + 40)) });
+      setPos({ left: Math.round(w / 2 - DEFAULT_W / 2), top: Math.round(h - (DEFAULT_H + 32)) });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (!panelRef.current) return;
-      const clientX = e.clientX;
-      const clientY = e.clientY;
       if (draggingRef.current) {
-        const dx = clientX - startRef.current.x;
-        const dy = clientY - startRef.current.y;
-        const newLeft = startRef.current.left + dx;
-        const newTop = startRef.current.top + dy;
-        // clamp to viewport with 10px padding
-        const clampedLeft = Math.min(Math.max(10, newLeft), Math.max(10, window.innerWidth - (size.width + 10)));
-        const clampedTop = Math.min(Math.max(10, newTop), Math.max(10, window.innerHeight - (size.height + 10)));
-        setPos({ left: clampedLeft, top: clampedTop });
+        const dx = e.clientX - startRef.current.x;
+        const dy = e.clientY - startRef.current.y;
+        const newLeft = Math.min(Math.max(10, startRef.current.left + dx), window.innerWidth - size.width - 10);
+        const newTop = Math.min(Math.max(10, startRef.current.top + dy), window.innerHeight - size.height - 10);
+        setPos({ left: newLeft, top: newTop });
       } else if (resizingRef.current) {
-        const dx = clientX - startRef.current.x;
-        const dy = clientY - startRef.current.y;
-        // compute available max size based on current position
-        const maxW = Math.max(320, window.innerWidth - (startRef.current.left + 20));
-        const maxH = Math.max(160, window.innerHeight - (startRef.current.top + 20));
-        const newW = Math.max(320, Math.min(maxW, startRef.current.width + dx));
-        const newH = Math.max(160, Math.min(maxH, startRef.current.height + dy));
-        setSize({ width: newW, height: newH });
+        const dx = e.clientX - startRef.current.x;
+        const dy = e.clientY - startRef.current.y;
+        const maxW = Math.max(340, window.innerWidth - (startRef.current.left + 20));
+        const maxH = Math.max(150, window.innerHeight - (startRef.current.top + 20));
+        setSize({
+          width: Math.max(340, Math.min(maxW, startRef.current.width + dx)),
+          height: Math.max(150, Math.min(maxH, startRef.current.height + dy)),
+        });
       }
     };
     const onUp = () => { draggingRef.current = false; resizingRef.current = false; };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, []);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [size.width, size.height]);
+
   const startDrag = (e: React.MouseEvent) => {
     e.stopPropagation();
     draggingRef.current = true;
@@ -102,62 +94,193 @@ export function SuggestionPanel({ versions, index, onApply, onReject, onRegenera
     startRef.current.y = e.clientY;
     startRef.current.width = size.width;
     startRef.current.height = size.height;
-    // ensure startRef has current left/top for max size calculations
     startRef.current.left = pos?.left ?? startRef.current.left;
     startRef.current.top = pos?.top ?? startRef.current.top;
   };
+
+  const textAreaHeight = Math.max(56, size.height - 118);
+
   return (
-    <div style={{ position: 'fixed', zIndex: 60, left: pos ? pos.left : '50%', top: pos ? pos.top : 'auto', transform: pos ? 'none' : 'translateX(-50%)', width: size.width }}>
-      <div ref={panelRef} className="relative bg-white border rounded-2xl shadow-lg p-6" onMouseDown={(e) => e.stopPropagation()} style={{ height: size.height }}>
-        {/* left cyan bar */}
-        <div style={{ position: 'absolute', left: 14, top: 18, bottom: 18, width: 4, background: '#33C3FF', borderRadius: 4 }} />
+    <div style={{
+      position: 'fixed',
+      zIndex: 60,
+      left: pos ? pos.left : '50%',
+      top: pos ? pos.top : 'auto',
+      transform: pos ? 'none' : 'translateX(-50%)',
+      width: size.width,
+      filter: 'drop-shadow(0 8px 24px rgba(8,22,33,0.12))',
+    }}>
+      <div
+        ref={panelRef}
+        style={{
+          position: 'relative',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
+          borderRadius: 14,
+          height: size.height,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+        onMouseDown={e => e.stopPropagation()}
+      >
+        {/* Left cyan accent bar */}
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: '#33C3FF', borderRadius: '14px 0 0 14px' }} />
 
-        <div className="flex items-start justify-between" onMouseDown={startDrag} style={{ cursor: 'grab' }}>
-          <div className="flex items-center gap-3">
-            <div className="text-xs font-semibold uppercase text-[#0d95d8] flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              VARIATION PROPOSED
-            </div>
+        {/* Header — draggable */}
+        <div
+          onMouseDown={startDrag}
+          style={{
+            cursor: 'grab',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 14px 8px 18px',
+            borderBottom: '1px solid #f1f5f9',
+            flexShrink: 0,
+            userSelect: 'none',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Sparkles size={13} color="#0d95d8" strokeWidth={2} />
+            <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#0d95d8' }}>
+              Variation Proposed
+            </span>
+            <span style={{ marginLeft: 4, fontSize: 10, color: '#6b7280' }}>
+              {index + 1}/{versions.length}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="px-2 py-1 text-xs rounded-full bg-[#F0FBFF]" style={{ color: scoreColor(aiScore ?? null) }}>
-              AI SCORE: {aiScore != null ? `${aiScore}%` : '—'}
-            </div>
-            <div className="px-2 py-1 text-xs rounded-full bg-[#FFF4E6] text-[#D97706]">ACADEMIC</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {aiScore != null && (
+              <span style={{
+                fontSize: 10, fontWeight: 600, padding: '2px 8px',
+                borderRadius: 20, background: '#f8fafc',
+                border: `1px solid ${scoreColor(aiScore)}22`,
+                color: scoreColor(aiScore),
+                letterSpacing: '0.02em',
+              }}>
+                AI {aiScore}%
+              </span>
+            )}
+            <span style={{
+              fontSize: 10, fontWeight: 500, padding: '2px 8px',
+              borderRadius: 20, background: '#FFF8ED',
+              border: '1px solid #fde68a', color: '#D97706',
+              letterSpacing: '0.02em',
+            }}>ACADEMIC</span>
+
+            {/* Close */}
+            <button
+              onClick={onReject}
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                color: '#9ca3af', fontSize: 14, lineHeight: 1,
+                padding: '2px 4px', borderRadius: 4,
+                display: 'flex', alignItems: 'center',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#9ca3af')}
+              title="Reject"
+            >✕</button>
           </div>
         </div>
 
-        <div className="mt-4 p-6 rounded-lg bg-white border" style={{ height: Math.max(80, size.height - 140), overflow: 'auto' }}>
-          <blockquote className="text-lg italic text-[#111827]">“{current?.text} ”</blockquote>
+        {/* Text preview area */}
+        <div style={{
+          flex: 1,
+          margin: '8px 14px 0 18px',
+          padding: '8px 12px',
+          borderRadius: 8,
+          background: '#f9fbfd',
+          border: '1px solid #e8f0f7',
+          overflow: 'auto',
+          height: textAreaHeight,
+        }}>
+          <p style={{
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: '#1f2937',
+            margin: 0,
+            fontStyle: 'italic',
+          }}>
+            "{current?.text}"
+          </p>
         </div>
 
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => onRegenerate(index)} className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-white border text-sm">
-              <RefreshCw className="h-4 w-4" /> Regenerate
+        {/* Footer actions */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '8px 14px 10px 18px',
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={() => onRegenerate(index)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+                padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0',
+                background: '#fff', fontSize: 11, color: '#374151',
+                cursor: 'pointer', fontWeight: 500,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+            >
+              <RefreshCw size={11} /> Regenerate
             </button>
 
-            <div className="flex items-center gap-2">
-              <button onClick={onPrev} className="p-2 rounded-md bg-white border"><ChevronLeft /></button>
-              <button onClick={onNext} className="p-2 rounded-md bg-white border"><ChevronRight /></button>
-              <div className="text-sm text-[#6B7280]">{index + 1}/{versions.length}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+              <button
+                onClick={onPrev}
+                disabled={index === 0}
+                style={{
+                  padding: '4px 6px', borderRadius: 6, border: '1px solid #e2e8f0',
+                  background: '#fff', cursor: index === 0 ? 'default' : 'pointer',
+                  color: index === 0 ? '#d1d5db' : '#374151', display: 'flex', alignItems: 'center',
+                }}
+              ><ChevronLeft size={13} /></button>
+              <button
+                onClick={onNext}
+                disabled={index === versions.length - 1}
+                style={{
+                  padding: '4px 6px', borderRadius: 6, border: '1px solid #e2e8f0',
+                  background: '#fff', cursor: index === versions.length - 1 ? 'default' : 'pointer',
+                  color: index === versions.length - 1 ? '#d1d5db' : '#374151', display: 'flex', alignItems: 'center',
+                }}
+              ><ChevronRight size={13} /></button>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button onClick={onReject} className="text-sm text-[#EF4444] flex items-center gap-2">✖ Reject</button>
-            <button onClick={() => onApply(index)} className="px-4 py-2 bg-[#0d95d8] hover:bg-[#0b86c9] text-white rounded-md">Apply Change</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button
+              onClick={() => onApply(index)}
+              style={{
+                padding: '5px 16px', background: '#0d95d8', color: '#fff',
+                border: 'none', borderRadius: 7, fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', letterSpacing: '-0.1px',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#0b86c9')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#0d95d8')}
+            >Apply Change</button>
           </div>
         </div>
 
-        {/* resize handle */}
+        {/* Resize handle */}
         <div
           onMouseDown={startResize}
-          style={{ position: 'absolute', right: 12, bottom: 12, width: 18, height: 18, cursor: 'nwse-resize', borderRadius: 3, background: '#E6F6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{
+            position: 'absolute', right: 8, bottom: 8,
+            width: 14, height: 14, cursor: 'nwse-resize',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: 0.4,
+          }}
           aria-hidden
         >
-          <div style={{ width: 10, height: 10, transform: 'rotate(45deg)', borderBottom: '2px solid #0d95d8', borderRight: '2px solid #0d95d8' }} />
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M9 1L1 9M9 5L5 9M9 9" stroke="#0d95d8" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
         </div>
       </div>
     </div>

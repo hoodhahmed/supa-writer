@@ -2,29 +2,42 @@
    NAPKIN-STYLE EDITOR UI
    ============================================================ */
 
+:root {
+  --napkin-header-height: 64px;
+  --paper-ivory: #FFFDF9;
+  --paper-white: #FFFFFF;
+  --ink-charcoal: #2C2F31;
+  --ink-subtle: #64748B;
+  --paper-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 12px 24px -4px rgba(0,0,0,0.04);
+}
+
 /* ---- App shell ---- */
 .napkin-app {
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100vw;
-  background: var(--napkin-bg);
+  background: #F1F4F6; /* Slightly deeper background to make ivory paper pop */
   overflow: hidden;
+  padding-top: 8px;
 }
 
 /* ---- Header ---- */
 .napkin-header {
   height: var(--napkin-header-height);
-  background: #FFFFFF;
-  border-bottom: 1px solid var(--napkin-border);
+  background: var(--paper-white);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 24px;
+  margin: 0 16px 8px;
   position: sticky;
-  top: 0;
+  top: 8px;
   z-index: 50;
   flex-shrink: 0;
+  box-shadow: var(--paper-shadow);
 }
 
 .napkin-header-left {
@@ -42,25 +55,38 @@
 .napkin-new-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: #1A1A1A;
-  color: #FFFFFF;
+  gap: 8px;
+  background: #FFFFFF;
+  color: #1A1A1A;
   font-family: 'Geomanist', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 7px 14px;
-  border-radius: 8px;
-  border: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
   cursor: pointer;
-  transition: background 0.15s;
-  letter-spacing: -0.1px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin-right: 12px;
 }
-.napkin-new-btn:hover { background: #333333; }
+
+.napkin-new-btn:hover {
+  background: #F8FAFB;
+  border-color: #33C3FF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(51, 195, 255, 0.1);
+}
+
+.napkin-new-btn:active {
+  transform: translateY(0);
+}
 
 .napkin-new-icon {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #33C3FF;
 }
 
 .napkin-header-action-btn {
@@ -146,170 +172,183 @@
 /* ---- Sidebar ---- */
 .napkin-sidebar {
   width: var(--napkin-sidebar-width);
-  background: var(--napkin-sidebar-bg);
-  border-right: 1px solid var(--napkin-border);
+  background: var(--paper-white);
+  border-right: 1px solid rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0 0 16px 16px;
+  border-radius: 12px;
+  box-shadow: var(--paper-shadow);
+  border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .napkin-sidebar-collapsed {
-  width: 44px;
-  background: var(--napkin-sidebar-bg);
-  border-right: 1px solid var(--napkin-border);
+  width: 56px;
+  background: var(--paper-white);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 12px;
+  padding-top: 16px;
   flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0 0 16px 16px;
+  box-shadow: var(--paper-shadow);
 }
 
 .napkin-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 14px 10px;
-  border-bottom: 1px solid var(--napkin-border);
+  padding: 20px 18px 12px;
 }
 
 .napkin-sidebar-library-btn {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   font-family: 'Geomanist', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--napkin-text);
-  letter-spacing: -0.1px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -0.2px;
 }
 
 .napkin-sidebar-toggle-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 5px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   border: none;
   background: transparent;
-  color: var(--napkin-text-muted);
+  color: #94A3B8;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition: all 0.2s ease;
 }
 .napkin-sidebar-toggle-btn:hover {
-  background: #EBEBEB;
-  color: var(--napkin-text);
+  background: #F1F5F9;
+  color: #1A1A1A;
+  transform: translateX(-2px);
 }
 
-.napkin-sidebar-expand-btn {
-  margin-top: 4px;
-  width: 30px;
-  height: 30px;
+.napkin-sidebar-expand-btn:hover {
+  transform: translateX(2px);
 }
 
 /* Tabs */
 .napkin-sidebar-tabs {
   display: flex;
-  padding: 10px 14px 6px;
-  gap: 2px;
-  border-bottom: 1px solid var(--napkin-border);
+  padding: 0 14px 12px;
+  gap: 4px;
 }
 
 .napkin-sidebar-tab {
   font-family: 'Geomanist', sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--napkin-text-muted);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #64748B;
   background: transparent;
   border: none;
-  padding: 5px 8px;
-  border-radius: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition: all 0.2s ease;
   letter-spacing: -0.1px;
 }
 .napkin-sidebar-tab:hover {
-  color: var(--napkin-text);
-  background: #EBEBEB;
+  color: #1A1A1A;
+  background: #F1F5F9;
 }
 .napkin-sidebar-tab-active {
-  color: var(--napkin-text) !important;
-  font-weight: 500;
-  background: transparent !important;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  color: #33C3FF !important;
+  background: rgba(51, 195, 255, 0.08) !important;
 }
 
 /* Document list */
 .napkin-doc-list {
-  padding: 6px 8px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .napkin-doc-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 8px;
-  border-radius: 6px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background 0.12s;
-  group: true;
+  transition: all 0.2s ease;
   position: relative;
+  border: 1px solid transparent;
 }
 .napkin-doc-item:hover {
-  background: #EBEBEB;
+  background: #F8FAFB;
+  border-color: rgba(0, 0, 0, 0.02);
 }
 .napkin-doc-item-active {
-  background: #EBEBEB;
+  background: #F8FAFB;
+  border-color: rgba(51, 195, 255, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .napkin-doc-icon {
-  color: var(--napkin-text-muted);
+  color: #94A3B8;
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  transition: color 0.2s ease;
 }
 .napkin-doc-item-active .napkin-doc-icon {
-  color: var(--napkin-text-secondary);
+  color: #33C3FF;
 }
 
 .napkin-doc-title {
   font-family: 'Geomanist', sans-serif;
-  font-size: 12.5px;
-  color: var(--napkin-text-secondary);
+  font-size: 13px;
+  color: #475569;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   letter-spacing: -0.1px;
+  transition: color 0.2s ease;
 }
 .napkin-doc-item-active .napkin-doc-title {
-  color: var(--napkin-text);
+  color: #1A1A1A;
   font-weight: 500;
 }
 
 .napkin-doc-menu {
-  font-size: 14px;
-  color: var(--napkin-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  color: #CBD5E1;
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
+  border-radius: 6px;
   opacity: 0;
-  letter-spacing: 1px;
-  transition: opacity 0.1s, background 0.1s;
+  transition: all 0.15s ease;
 }
 .napkin-doc-item:hover .napkin-doc-menu {
   opacity: 1;
 }
 .napkin-doc-menu:hover {
-  background: #D8D8D8;
+  background: #F1F5F9;
+  color: #EF4444;
 }
+
 
 /* ---- Main area ---- */
 .napkin-main {
@@ -327,26 +366,30 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 32px 48px;
+  padding: 16px 32px 48px;
   position: relative;
 
-  /* Tight cyan dot grid matching reference image */
-  background-color: #f5f5f5;
-  background-image: radial-gradient(circle, rgba(231, 231, 231, 0.55) 1px, transparent 1px);
-  background-size: 18px 18px;
+  /* Premium subtle dot grid */
+  background-color: transparent; /* Parent .napkin-app handles background now */
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.05) 0.8px, transparent 0.8px);
+  background-size: 24px 24px;
 }
 
 /* ---- Paper ---- */
 .napkin-paper {
   width: 100%;
-  max-width: 720px;
-  min-height: calc(100vh - var(--napkin-header-height) - 64px);
-  background: var(--napkin-paper);
-  border-radius: 10px;
-  box-shadow: var(--napkin-shadow);
+  max-width: 840px;
+  min-height: calc(100vh - var(--napkin-header-height) - 48px);
+  background: var(--paper-ivory);
+  border-radius: 4px 16px 16px 4px; /* Slight asymmetrical roundness like a book */
+  box-shadow: 
+    0 1px 1px rgba(0,0,0,0.05), 
+    0 10px 20px -5px rgba(0,0,0,0.08), 
+    0 5px 10px -5px rgba(0,0,0,0.04);
   position: relative;
   display: flex;
   overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 /* Shimmer sweep overlay — triggered by .is-rewriting class on paper */
@@ -354,12 +397,12 @@
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 10px;
+  border-radius: 12px;
   pointer-events: none;
   background: linear-gradient(
     105deg,
     transparent 30%,
-    rgba(52, 195, 235, 0.10) 50%,
+    rgba(51, 195, 255, 0.08) 50%,
     transparent 70%
   );
   background-size: 200% 100%;
@@ -385,10 +428,10 @@
   color: transparent;
   background: linear-gradient(
     90deg,
-    #1AABF0 0%,
-    #5ED4F4 35%,
-    #1AABF0 65%,
-    #0d95d8 100%
+    #33C3FF 0%,
+    #70E0FF 35%,
+    #33C3FF 65%,
+    #00A3E0 100%
   );
   background-size: 250% auto;
   background-clip: text;
@@ -407,8 +450,8 @@
   content: '';
   display: inline-block;
   width: 2px;
-  height: 1em;
-  background: var(--napkin-accent);
+  height: 1.1em;
+  background: #33C3FF;
   vertical-align: text-bottom;
   margin-left: 2px;
   animation: cursor-blink 0.8s step-end infinite;
@@ -427,7 +470,7 @@
 
 @keyframes rewrite-settle {
   from {
-    color: var(--napkin-accent);
+    color: #33C3FF;
     opacity: 0.7;
   }
   to {
@@ -439,45 +482,32 @@
 /* Blue left accent (like Napkin screenshot) */
 .napkin-paper-accent {
   width: 4px;
-  background: var(--napkin-accent);
+  background: #33C3FF;
   flex-shrink: 0;
-  border-radius: 10px 0 0 10px;
 }
 
 .napkin-paper-content {
   flex: 1;
-  padding: 40px 44px;
+  padding: 64px 72px;
   overflow-y: auto;
-  background-color: #fffdf9;
+  background-color: var(--paper-ivory);
+  /* Subtly darker lined paper effect */
   background-image:
-    linear-gradient(to bottom, rgba(46, 59, 69, 0.06) 1px, transparent 1px);
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
   background-size: 100% 32px;
-  background-position: 0 22px;
+  background-position: 0 24px;
 }
 
-/* Chat bubble button (right edge of canvas area) */
-.napkin-chat-btn {
-  position: fixed;
-  right: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #FFFFFF;
-  border: 1px solid var(--napkin-border);
-  color: var(--napkin-text-secondary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: box-shadow 0.15s, color 0.15s;
-  z-index: 30;
+/* Floating Toolbar Animation */
+@keyframes toolbar-fade-in {
+  from { opacity: 0; transform: translate(-50%, -110%) scale(0.95); }
+  to { opacity: 1; transform: translate(-50%, -120%) scale(1); }
 }
-.napkin-chat-btn:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  color: var(--napkin-accent);
+
+.floating-toolbar {
+  animation: toolbar-fade-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: bottom center;
+  transform: translate(-50%, -120%);
 }
 
 /* ---- Editor canvas ---- */
@@ -485,11 +515,11 @@
   outline: none;
   width: 100%;
   min-height: 400px;
-  color: var(--napkin-text);
+  color: var(--ink-charcoal);
   font-family: 'Geomanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 15px;
-  line-height: 1.75;
-  letter-spacing: -0.15px;
+  font-size: 16px;
+  line-height: 1.8;
+  letter-spacing: -0.1px;
   word-wrap: break-word;
   white-space: normal;
 }
@@ -504,36 +534,36 @@
 
 .editor-canvas h1 {
   font-size: 32px;
-  font-weight: 600;
-  color: var(--napkin-text);
+  font-weight: 700;
+  color: var(--ink-charcoal);
   letter-spacing: -0.8px;
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   line-height: 1.2;
 }
 
 .editor-canvas h2 {
   font-size: 24px;
   font-weight: 600;
-  color: var(--napkin-text);
+  color: var(--ink-charcoal);
   letter-spacing: -0.5px;
-  margin-top: 28px;
-  margin-bottom: 14px;
+  margin-top: 32px;
+  margin-bottom: 16px;
 }
 
 .editor-canvas h3 {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 600;
-  color: var(--napkin-text);
+  color: var(--ink-charcoal);
   letter-spacing: -0.3px;
-  margin-top: 20px;
-  margin-bottom: 10px;
+  margin-top: 24px;
+  margin-bottom: 12px;
 }
 
 .editor-canvas p {
-  color: var(--napkin-text);
+  color: var(--ink-charcoal);
   font-weight: 400;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .editor-canvas blockquote {

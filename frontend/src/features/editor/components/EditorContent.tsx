@@ -1,4 +1,4 @@
-import { useRef, useEffect, forwardRef } from 'react';
+import { useEffect, forwardRef, type ForwardedRef } from 'react';
 import { ForensicOverlay } from '@/components/forensic-overlay';
 import type { Document as EditorDocument } from '@/types/editor';
 
@@ -45,7 +45,7 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
         onPaste={onPaste}
       >
         {docScore?.sentences && !isScanning && (
-          <ForensicOverlay sentences={docScore.sentences} editorRef={ref} />
+          <ForensicOverlay sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
       </div>
     );
