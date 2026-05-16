@@ -15,62 +15,60 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }:
     position: 'fixed',
     left: x,
     top: y,
-    transform: 'translate(-50%, -120%)',
     zIndex: 60,
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 10,
-    boxShadow: '0 4px 16px rgba(8,22,33,0.10), 0 1px 4px rgba(8,22,33,0.06)',
-    padding: '5px 6px',
+    background: '#1A1A1A',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+    padding: '6px',
     display: 'flex',
     gap: 4,
     alignItems: 'center',
+    color: '#FFFFFF',
   };
 
   const btnBase: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 5,
-    padding: '5px 10px',
-    borderRadius: 7,
+    gap: 6,
+    padding: '6px 12px',
+    borderRadius: 8,
     border: 'none',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 500,
     cursor: 'pointer',
-    transition: 'background 0.12s, opacity 0.12s',
+    transition: 'all 0.15s ease',
     letterSpacing: '-0.1px',
     whiteSpace: 'nowrap',
+    color: '#E5E7EB',
+    background: 'transparent',
   };
 
   const divider: React.CSSProperties = {
     width: 1,
     height: 18,
-    background: '#e2e8f0',
-    margin: '0 2px',
+    background: 'rgba(255,255,255,0.15)',
+    margin: '0 4px',
     flexShrink: 0,
   };
 
   return (
-    <div style={style} role="toolbar" aria-label="Selection toolbar">
+    <div style={style} className="floating-toolbar" role="toolbar" aria-label="Selection toolbar">
       {/* Format group */}
-      <button
-        title="Bold"
-        style={{ ...btnBase, background: 'transparent', color: '#374151', fontWeight: 700, padding: '5px 8px', fontSize: 13 }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-      >B</button>
-      <button
-        title="Italic"
-        style={{ ...btnBase, background: 'transparent', color: '#374151', fontStyle: 'italic', padding: '5px 8px', fontSize: 13 }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-      >I</button>
-      <button
-        title="Underline"
-        style={{ ...btnBase, background: 'transparent', color: '#374151', textDecoration: 'underline', padding: '5px 8px', fontSize: 13 }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#f3f4f6')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-      >U</button>
+      <div style={{ display: 'flex', gap: 2 }}>
+        <button
+          title="Bold"
+          style={{ ...btnBase, padding: '6px 10px', fontWeight: 700 }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; }}
+        >B</button>
+        <button
+          title="Italic"
+          style={{ ...btnBase, padding: '6px 10px', fontStyle: 'italic' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; }}
+        >I</button>
+      </div>
 
       <div style={divider} />
 
@@ -81,14 +79,16 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }:
         title="Humanize selected text"
         style={{
           ...btnBase,
-          background: disabled ? '#b2e8fb' : '#33C3FF',
+          background: disabled ? 'rgba(51, 195, 255, 0.5)' : '#33C3FF',
           color: '#fff',
           opacity: disabled ? 0.7 : 1,
+          padding: '6px 14px',
+          boxShadow: '0 2px 4px rgba(51, 195, 255, 0.2)',
         }}
-        onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#0db3f0'; }}
-        onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = '#33C3FF'; }}
+        onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = '#0db3f0'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+        onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#33C3FF'; e.currentTarget.style.transform = 'translateY(0)'; } }}
       >
-        <Sparkles size={12} strokeWidth={2} />
+        <Sparkles size={14} strokeWidth={2.5} />
         Humanize
       </button>
 
@@ -99,15 +99,11 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }:
         title="Change tone"
         style={{
           ...btnBase,
-          background: 'transparent',
-          color: '#374151',
-          border: '1px solid #e2e8f0',
-          opacity: disabled ? 0.7 : 1,
         }}
-        onMouseEnter={e => { if (!disabled) e.currentTarget.style.background = '#f3f4f6'; }}
-        onMouseLeave={e => { if (!disabled) e.currentTarget.style.background = 'transparent'; }}
+        onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; e.currentTarget.style.color = '#FFFFFF'; } }}
+        onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#E5E7EB'; } }}
       >
-        <Sliders size={12} strokeWidth={2} />
+        <Sliders size={14} strokeWidth={2} />
         Tone
       </button>
 
@@ -119,18 +115,15 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, onClose, disabled }:
         title="Dismiss"
         style={{
           ...btnBase,
-          background: 'transparent',
+          padding: '6px 8px',
           color: '#9ca3af',
-          padding: '5px 6px',
-          fontSize: 14,
-          lineHeight: 1,
-          border: 'none',
         }}
-        onMouseEnter={e => (e.currentTarget.style.color = '#374151')}
-        onMouseLeave={e => (e.currentTarget.style.color = '#9ca3af')}
+        onMouseEnter={e => { e.currentTarget.style.color = '#FFFFFF'; e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color = '#9ca3af'; e.currentTarget.style.background = 'transparent'; }}
       >✕</button>
     </div>
   );
 }
+
 
 export default FloatingToolbar;

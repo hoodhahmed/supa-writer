@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { EssenceEditor } from '@/components/essence-editor';
 import { AuthPage } from '@/components/auth/AuthPage';
+import ProfilePage from '@/components/auth/ProfilePage';
 import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/services/useAuth';
 import { LandingPage, AboutPage, PricingPage } from '@/components/marketing/site-pages';
@@ -52,6 +53,18 @@ function AppRoutes() {
             <main className="h-screen w-screen bg-background">
               <Dashboard />
             </main>
+          ) : (
+            <Navigate to="/auth" replace />
+          )
+        }
+      />
+
+      {/* Profile */}
+      <Route
+        path="/profile"
+        element={
+          token ? (
+            <ProfilePage />
           ) : (
             <Navigate to="/auth" replace />
           )

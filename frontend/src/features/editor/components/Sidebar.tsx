@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 export function Sidebar({
   documents,
   currentDocId,
+  onCreate,
   onDelete,
   onSelect,
 }: any) {
@@ -40,13 +41,24 @@ export function Sidebar({
           </svg>
           <span>Library</span>
         </div>
-        <button
-          className="napkin-sidebar-toggle-btn"
-          onClick={() => setCollapsed(true)}
-          title="Collapse sidebar"
-        >
-          <ChevronLeft size={15} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            className="napkin-sidebar-toggle-btn"
+            onClick={() => onCreate?.()}
+            title="New document"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+          <button
+            className="napkin-sidebar-toggle-btn"
+            onClick={() => setCollapsed(true)}
+            title="Collapse sidebar"
+          >
+            <ChevronLeft size={15} />
+          </button>
+        </div>
       </div>
 
       {/* Tabs: My drafts / Recent */}
