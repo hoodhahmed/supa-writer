@@ -1,193 +1,602 @@
-/* Notebook Editor Styles */
+/* ============================================================
+   NAPKIN-STYLE EDITOR UI
+   ============================================================ */
 
-.notebook-container {
-  @apply flex flex-col h-screen w-full bg-[#F5F5F5];
+/* ---- App shell ---- */
+.napkin-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background: var(--napkin-bg);
+  overflow: hidden;
 }
 
-.notebook-canvas-wrapper {
-  @apply flex-1 bg-[#F5F5F5] overflow-hidden flex items-center justify-center py-12 px-8;
+/* ---- Header ---- */
+.napkin-header {
+  height: var(--napkin-header-height);
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--napkin-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  flex-shrink: 0;
 }
 
-.notebook-paper {
-  @apply relative w-full max-w-3xl h-full bg-white rounded-2xl overflow-y-auto overflow-x-hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 25px rgba(0, 0, 0, 0.08);
+.napkin-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* Ruled lines background - more visible */
-.notebook-lines {
-  @apply absolute inset-0 pointer-events-none rounded-2xl;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 31px,
-    #D9D9D9 31px,
-    #D9D9D9 32px
+.napkin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.napkin-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1A1A1A;
+  color: #FFFFFF;
+  font-family: 'Geomanist', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  letter-spacing: -0.1px;
+}
+.napkin-new-btn:hover { background: #333333; }
+
+.napkin-new-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.napkin-header-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--napkin-text-secondary);
+  font-family: 'Geomanist', sans-serif;
+  font-size: 12.5px;
+  font-weight: 400;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.napkin-header-action-btn:hover {
+  background: #F2F2F2;
+  color: #1A1A1A;
+}
+
+.napkin-brand-studio-btn {
+  /* Slightly differentiated look */
+}
+
+.napkin-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--napkin-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.napkin-icon-btn:hover {
+  background: #F2F2F2;
+  color: #1A1A1A;
+}
+
+.napkin-signin-btn {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 13px;
+  color: var(--napkin-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.napkin-signin-btn:hover {
+  background: #F2F2F2;
+  color: #1A1A1A;
+}
+
+.napkin-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #1A1A1A;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+}
+
+/* ---- Body layout ---- */
+.napkin-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ---- Sidebar ---- */
+.napkin-sidebar {
+  width: var(--napkin-sidebar-width);
+  background: var(--napkin-sidebar-bg);
+  border-right: 1px solid var(--napkin-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.napkin-sidebar-collapsed {
+  width: 44px;
+  background: var(--napkin-sidebar-bg);
+  border-right: 1px solid var(--napkin-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 12px;
+  flex-shrink: 0;
+}
+
+.napkin-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--napkin-border);
+}
+
+.napkin-sidebar-library-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Geomanist', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--napkin-text);
+  letter-spacing: -0.1px;
+}
+
+.napkin-sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--napkin-text-muted);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.napkin-sidebar-toggle-btn:hover {
+  background: #EBEBEB;
+  color: var(--napkin-text);
+}
+
+.napkin-sidebar-expand-btn {
+  margin-top: 4px;
+  width: 30px;
+  height: 30px;
+}
+
+/* Tabs */
+.napkin-sidebar-tabs {
+  display: flex;
+  padding: 10px 14px 6px;
+  gap: 2px;
+  border-bottom: 1px solid var(--napkin-border);
+}
+
+.napkin-sidebar-tab {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--napkin-text-muted);
+  background: transparent;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  letter-spacing: -0.1px;
+}
+.napkin-sidebar-tab:hover {
+  color: var(--napkin-text);
+  background: #EBEBEB;
+}
+.napkin-sidebar-tab-active {
+  color: var(--napkin-text) !important;
+  font-weight: 500;
+  background: transparent !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Document list */
+.napkin-doc-list {
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.napkin-doc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+  group: true;
+  position: relative;
+}
+.napkin-doc-item:hover {
+  background: #EBEBEB;
+}
+.napkin-doc-item-active {
+  background: #EBEBEB;
+}
+
+.napkin-doc-icon {
+  color: var(--napkin-text-muted);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.napkin-doc-item-active .napkin-doc-icon {
+  color: var(--napkin-text-secondary);
+}
+
+.napkin-doc-title {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 12.5px;
+  color: var(--napkin-text-secondary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.1px;
+}
+.napkin-doc-item-active .napkin-doc-title {
+  color: var(--napkin-text);
+  font-weight: 500;
+}
+
+.napkin-doc-menu {
+  font-size: 14px;
+  color: var(--napkin-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  opacity: 0;
+  letter-spacing: 1px;
+  transition: opacity 0.1s, background 0.1s;
+}
+.napkin-doc-item:hover .napkin-doc-menu {
+  opacity: 1;
+}
+.napkin-doc-menu:hover {
+  background: #D8D8D8;
+}
+
+/* ---- Main area ---- */
+.napkin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ---- Canvas wrapper — dot grid background ---- */
+.napkin-canvas-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 48px;
+  position: relative;
+
+  /* Tight cyan dot grid matching reference image */
+  background-color: #F4F8FB;
+  background-image: radial-gradient(circle, rgba(52, 195, 235, 0.55) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* ---- Paper ---- */
+.napkin-paper {
+  width: 100%;
+  max-width: 720px;
+  min-height: calc(100vh - var(--napkin-header-height) - 64px);
+  background: var(--napkin-paper);
+  border-radius: 10px;
+  box-shadow: var(--napkin-shadow);
+  position: relative;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Shimmer sweep overlay — triggered by .is-rewriting class on paper */
+.napkin-paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(52, 195, 235, 0.10) 50%,
+    transparent 70%
   );
+  background-size: 200% 100%;
+  opacity: 0;
+  z-index: 20;
 }
 
-/* Pink vertical margin line */
-.notebook-margin {
-  @apply absolute top-0 left-12 h-full w-1 bg-[#F2CACA] pointer-events-none;
+.napkin-paper.is-rewriting::after {
+  opacity: 1;
+  animation: paper-shimmer 1.4s ease-in-out infinite;
 }
 
-.notebook-margin {
-  opacity: 0.85;
+@keyframes paper-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
-/* Content area with proper padding */
-.notebook-content {
-  @apply relative z-10 px-12 py-12 h-full overflow-y-auto;
+/* ---- Rewriting text shimmer — applied to spans wrapping words being humanised ---- */
+/* Usage: wrap target text in <span class="rewrite-shimmer">...</span> */
+.rewrite-shimmer {
+  position: relative;
+  display: inline;
+  color: transparent;
+  background: linear-gradient(
+    90deg,
+    #1AABF0 0%,
+    #5ED4F4 35%,
+    #1AABF0 65%,
+    #0d95d8 100%
+  );
+  background-size: 250% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer 1.6s linear infinite;
 }
 
-/* Editor editable area */
+@keyframes text-shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 250% center; }
+}
+
+/* Rewriting cursor blink at end of shimmer word */
+.rewrite-shimmer::after {
+  content: '';
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: var(--napkin-accent);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: cursor-blink 0.8s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* Completed rewrite — fades from cyan to normal text */
+.rewrite-done {
+  color: var(--napkin-text);
+  animation: rewrite-settle 0.5s ease forwards;
+}
+
+@keyframes rewrite-settle {
+  from {
+    color: var(--napkin-accent);
+    opacity: 0.7;
+  }
+  to {
+    color: var(--napkin-text);
+    opacity: 1;
+  }
+}
+
+/* Blue left accent (like Napkin screenshot) */
+.napkin-paper-accent {
+  width: 4px;
+  background: var(--napkin-accent);
+  flex-shrink: 0;
+  border-radius: 10px 0 0 10px;
+}
+
+.napkin-paper-content {
+  flex: 1;
+  padding: 40px 44px;
+  overflow-y: auto;
+}
+
+/* Chat bubble button (right edge of canvas area) */
+.napkin-chat-btn {
+  position: fixed;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid var(--napkin-border);
+  color: var(--napkin-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: box-shadow 0.15s, color 0.15s;
+  z-index: 30;
+}
+.napkin-chat-btn:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  color: var(--napkin-accent);
+}
+
+/* ---- Editor canvas ---- */
 .editor-canvas {
-  @apply focus:outline-none text-[#111111] w-full;
-}
-
-.editor-canvas {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'SF Pro Display', sans-serif;
-  min-height: 100%;
-  font-size: 16px;
-  line-height: 1.8;
-  letter-spacing: -0.3px;
+  outline: none;
+  width: 100%;
+  min-height: 400px;
+  color: var(--napkin-text);
+  font-family: 'Geomanist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 15px;
+  line-height: 1.75;
+  letter-spacing: -0.15px;
   word-wrap: break-word;
   white-space: normal;
 }
 
 .editor-canvas h1 {
-  @apply text-[48px] md:text-[56px] font-bold text-[#111111];
-}
-
-.editor-canvas h1 {
-  letter-spacing: -1.2px;
-  margin-top: 32px;
-  margin-bottom: 24px;
-}
-
-.editor-canvas h2 {
-  @apply text-[36px] font-bold text-[#111111];
-}
-
-.editor-canvas h2 {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--napkin-text);
   letter-spacing: -0.8px;
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin-top: 0;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+
+.editor-canvas h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--napkin-text);
+  letter-spacing: -0.5px;
+  margin-top: 28px;
+  margin-bottom: 14px;
 }
 
 .editor-canvas h3 {
-  @apply text-[28px] font-bold text-[#111111];
-}
-
-.editor-canvas h3 {
-  letter-spacing: -0.6px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--napkin-text);
+  letter-spacing: -0.3px;
   margin-top: 20px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .editor-canvas p {
-  @apply text-[#555555] font-normal;
-}
-
-.editor-canvas p {
-  margin-bottom: 16px;
-}
-
-.editor-canvas blockquote {
-  @apply border-l-4 border-[#33C3FF]/30 italic text-[#555555];
+  color: var(--napkin-text);
+  font-weight: 400;
+  margin-bottom: 14px;
 }
 
 .editor-canvas blockquote {
-  padding-left: 24px;
+  border-left: 3px solid var(--napkin-accent);
+  color: var(--napkin-text-secondary);
+  padding-left: 20px;
   margin: 16px 0;
+  font-style: italic;
 }
 
-/* Highlight pending changes */
+/* Pending change highlight */
 .highlight-pending-change {
-  @apply bg-[#33C3FF]/15 rounded px-1 transition-all duration-300;
-}
-
-.highlight-pending-change {
+  background-color: rgba(26, 171, 240, 0.12);
+  border-radius: 3px;
+  padding: 0 2px;
+  transition: background-color 0.3s;
   animation: pulse-highlight 0.6s ease-out;
 }
 
 @keyframes pulse-highlight {
-  0% {
-    background-color: rgba(51, 195, 255, 0.25);
-    transform: scaleX(1.05);
-  }
-  100% {
-    background-color: rgba(51, 195, 255, 0.15);
-    transform: scaleX(1);
-  }
+  0% { background-color: rgba(26, 171, 240, 0.25); }
+  100% { background-color: rgba(26, 171, 240, 0.12); }
 }
 
-/* Floating suggestion panel */
+/* ---- Suggestion panel ---- */
 .suggestion-panel {
-  @apply fixed bottom-32 left-1/2 -translate-x-1/2 bg-white rounded-2xl p-6 w-full max-w-md shadow-lg z-40;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  border: 1px solid var(--napkin-border);
+  z-index: 50;
+  backdrop-filter: blur(8px);
 }
 
-.suggestion-panel {
-  border: 1px solid rgba(234, 234, 234, 0.5);
-  backdrop-filter: blur(10px);
-}
-
-/* Save indicator */
+/* ---- Save indicator ---- */
 .save-indicator {
-  @apply flex items-center gap-2 text-xs font-medium text-[#10B981] px-3 py-2 bg-white rounded-full shadow-md;
-}
-
-.save-indicator {
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  animation: fade-in 0.3s ease-in-out;
-}
-
-.save-indicator svg {
-  @apply h-3.5 w-3.5;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes fade-out {
-  from {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.9) translateY(10px);
-  }
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Geomanist', sans-serif;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #10B981;
+  padding: 7px 12px;
+  background: #FFFFFF;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid rgba(16,185,129,0.2);
+  animation: fade-in 0.25s ease;
 }
 
 .save-indicator.fading {
-  animation: fade-out 0.3s ease-in-out forwards;
+  animation: fade-out 0.25s ease forwards;
 }
 
-/* Particle burst animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.92) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes fade-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.92) translateY(8px); }
+}
+
+/* ---- Floating AI button (left center) ---- */
+/* Overriding FloatingActions component to match Napkin's blue circle */
+
+/* ---- Particle burst ---- */
 @keyframes particle-burst {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--tx), var(--ty))) scale(0.2);
-  }
-}
-
-/* Typography refinements */
-.editor-title-placeholder {
-  @apply text-[#CCCCCC] text-[48px] font-bold;
-}
-
-.editor-title-placeholder {
-  letter-spacing: -1.2px;
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2); }
 }

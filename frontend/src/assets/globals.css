@@ -47,3 +47,202 @@ button {
 input, textarea {
   @apply transition-all duration-200;
 }
+
+/* ============================================================
+   AUTH PAGE STYLES
+   ============================================================ */
+
+.auth-page {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background-color: #F4F8FB;
+}
+
+/* Dot grid background */
+.auth-bg-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(52, 195, 235, 0.50) 1px, transparent 1px);
+  background-size: 18px 18px;
+  pointer-events: none;
+}
+
+/* Auth card */
+.auth-card {
+  position: relative;
+  z-index: 10;
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 40px 44px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  border: 1px solid rgba(232, 232, 232, 0.8);
+}
+
+/* Logo */
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.auth-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: #1AABF0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.auth-logo-text {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -0.3px;
+}
+
+/* Titles */
+.auth-title {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -0.5px;
+  margin: 0 0 6px;
+}
+
+.auth-subtitle {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 14px;
+  color: #888888;
+  margin: 0 0 28px;
+  letter-spacing: -0.1px;
+}
+
+/* Form */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-label {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #555555;
+  letter-spacing: -0.1px;
+}
+
+.auth-input {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 14px;
+  color: #1A1A1A;
+  background: #FAFAFA;
+  border: 1px solid #E8E8E8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+}
+.auth-input:focus {
+  border-color: #1AABF0;
+  box-shadow: 0 0 0 3px rgba(26, 171, 240, 0.12);
+  background: #FFFFFF;
+}
+.auth-input::placeholder { color: #BBBBBB; }
+
+/* Messages */
+.auth-error {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 12.5px;
+  color: #E53E3E;
+  background: #FFF5F5;
+  border: 1px solid #FED7D7;
+  border-radius: 6px;
+  padding: 9px 12px;
+}
+
+.auth-info {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 12.5px;
+  color: #276749;
+  background: #F0FFF4;
+  border: 1px solid #C6F6D5;
+  border-radius: 6px;
+  padding: 9px 12px;
+}
+
+/* Submit button */
+.auth-submit-btn {
+  font-family: 'Geomanist', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  background: #1A1A1A;
+  border: none;
+  border-radius: 8px;
+  padding: 11px 20px;
+  cursor: pointer;
+  width: 100%;
+  letter-spacing: -0.1px;
+  transition: background 0.15s, opacity 0.15s;
+  margin-top: 4px;
+}
+.auth-submit-btn:hover:not(:disabled) { background: #333333; }
+.auth-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Switch mode */
+.auth-switch {
+  margin-top: 20px;
+  text-align: center;
+  font-family: 'Geomanist', sans-serif;
+  font-size: 13px;
+  color: #888888;
+}
+
+.auth-switch-btn {
+  background: none;
+  border: none;
+  color: #1AABF0;
+  font-family: 'Geomanist', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  transition: color 0.12s;
+}
+.auth-switch-btn:hover { color: #0d95d8; text-decoration: underline; }
+
+/* Loading spinner */
+.auth-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid #E8E8E8;
+  border-top-color: #1AABF0;
+  border-radius: 50%;
+  animation: spinner-rotate 0.7s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
