@@ -19,16 +19,19 @@ services:
         sync: false
 
   # 2. Frontend Service (TypeScript/Vite)
-  - type: web # or 'static' if it's a pure SPA
+  - type: static # static site for Vite SPA (serves built `dist` folder)
     name: supa-writer-frontend
-    env: node
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
-    startCommand: npm run start # Adjust based on your package.json
+    publish: dist
     envVars:
       - key: VITE_API_URL
         fromService:
           name: supa-writer-backend
           type: web
           property: host
+
+    # Alternative: if you prefer a long-running Node process, change `type` to `web`
+    # and set `startCommand: npm run preview -- --port $PORT` or add a `start` script
+    # to frontend/package.json that runs a static server.
