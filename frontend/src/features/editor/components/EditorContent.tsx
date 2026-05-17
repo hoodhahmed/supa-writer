@@ -1,4 +1,4 @@
-import { useEffect, forwardRef, type ForwardedRef } from 'react';
+import React, { useEffect, forwardRef, type ForwardedRef } from 'react';
 import { ForensicOverlay } from '@/components/forensic-overlay';
 import type { Document as EditorDocument } from '@/types/editor';
 
@@ -35,15 +35,16 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
     }, [currentDocId, documents, ref]);
 
     return (
-      <div
-        ref={ref}
-        contentEditable
-        suppressContentEditableWarning
-        className="editor-canvas"
-        onMouseUp={onSelection}
-        onInput={onInput}
-        onPaste={onPaste}
-      >
+      <div className="relative w-full">
+        <div
+          ref={ref}
+          contentEditable
+          suppressContentEditableWarning
+          className="editor-canvas"
+          onMouseUp={onSelection}
+          onInput={onInput}
+          onPaste={onPaste}
+        />
         {docScore?.sentences && !isScanning && (
           <ForensicOverlay sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}

@@ -512,6 +512,7 @@
 
 /* ---- Editor canvas ---- */
 .editor-canvas {
+  position: relative;
   outline: none;
   width: 100%;
   min-height: 400px;
@@ -522,6 +523,21 @@
   letter-spacing: -0.1px;
   word-wrap: break-word;
   white-space: normal;
+}
+
+/* AI Forensic Highlights */
+.ai-highlight-box {
+  background-color: rgba(255, 87, 34, 0.12);
+  border-bottom: 2px solid rgba(255, 87, 34, 0.3);
+  border-radius: 2px;
+  transition: all 0.2s ease;
+  cursor: help;
+  z-index: 1;
+}
+
+.ai-highlight-box:hover {
+  background-color: rgba(255, 87, 34, 0.2);
+  border-bottom-color: rgba(255, 87, 34, 0.5);
 }
 
 .editor-canvas > *:first-child {

@@ -8,19 +8,27 @@ import { cn } from '@/lib/utils';
 
 interface NotebookHeaderProps {
   onCreate?: () => unknown;
+  onScan?: () => void;
   docScore?: any;
   saved?: boolean;
 }
 
-export function NotebookHeader({ onCreate, docScore, saved }: NotebookHeaderProps) {
+export function NotebookHeader({ onCreate, onScan, docScore, saved }: NotebookHeaderProps) {
   const [openAuth, setOpenAuth] = useState(false);
   const { token, signout } = useAuth();
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
 
+  const getScoreColor = (confidence: number) => {
+    const c = confidence > 1 ? confidence : confidence * 100;
+    if (c < 20) return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
+    if (c < 60) return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+    return 'bg-red-500/10 text-red-600 border-red-500/20';
+  };
+
   return (
     <header className="napkin-header">
-      {/* Left section: Logo */}
+      {/* ... (logo section remains same) */}
       <div className="napkin-header-left">
         <Link to="/" className="flex items-center gap-2.5 group" title="Supa Write Home">
           <div className="bg-[#1A1A1A] p-1.5 rounded-lg group-hover:scale-110 transition-all">
@@ -32,44 +40,39 @@ export function NotebookHeader({ onCreate, docScore, saved }: NotebookHeaderProp
         </Link>
       </div>
 
-      {/* Center section: Navigation */}
-      <nav className="hidden md:flex items-center gap-8">
-        <Link 
-          to="/app" 
-          className={cn(
-            "text-sm font-bold transition-colors", 
-            location.pathname === '/app' ? "text-[#1A1A1A]" : "text-[#64748B] hover:text-[#1A1A1A]"
-          )}
-        >
-          Editor
-        </Link>
-        <Link 
-          to="/dashboard" 
-          className={cn(
-            "text-sm font-bold transition-colors", 
-            isDashboard ? "text-[#1A1A1A]" : "text-[#64748B] hover:text-[#1A1A1A]"
-          )}
-        >
-          Dashboard
-        </Link>
-        <Link to="/pricing" className="text-sm font-bold text-[#64748B] hover:text-[#1A1A1A] transition-colors">Pricing</Link>
-        <Link to="/about" className="text-sm font-bold text-[#64748B] hover:text-[#1A1A1A] transition-colors">About</Link>
-      </nav>
+      {/* ... (nav section remains same) */}
 
       {/* Right section: Auth/Actions */}
       <div className="napkin-header-right">
         {!isDashboard && (
           <div className="hidden lg:flex items-center gap-2 mr-4">
             <SaveStatus saved={saved ?? true} />
-            {docScore?.confidence != null && (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-[#33C3FF]/10 text-[#33C3FF] text-[10px] font-black uppercase">
+            
+            {docScore?.confidence != null ? (
+              <button 
+                onClick={onScan}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase transition-all hover:scale-105 active:scale-95",
+                  getScoreColor(docScore.confidence)
+                )}
+                title="Click to re-scan AI score"
+              >
                 <Sparkles size={10} strokeWidth={3} />
                 Score: {(() => {
                   const c = docScore.confidence;
                   const percent = c > 1 ? Math.round(c) : Math.round((c || 0) * 100);
                   return `${percent}%`;
                 })()}
-              </div>
+              </button>
+            ) : (
+              <button 
+                onClick={onScan}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-white text-slate-500 text-[10px] font-black uppercase hover:bg-slate-50 transition-all hover:scale-105 active:scale-95"
+                title="Manually trigger AI scan"
+              >
+                <Sparkles size={10} strokeWidth={3} />
+                Check AI
+              </button>
             )}
           </div>
         )}

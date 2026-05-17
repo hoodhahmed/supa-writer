@@ -285,7 +285,7 @@ export function EssenceEditor() {
   if (docsLoading) {
     return (
       <div className="napkin-app h-screen w-screen flex flex-col">
-        <NotebookHeader onCreate={createNewDoc} docScore={docScore} saved={isSaved} />
+        <NotebookHeader onCreate={createNewDoc} onScan={handleScan} docScore={docScore} saved={isSaved} />
         <div className="flex-1 flex items-center justify-center bg-[#F4F8FB]">
           <div className="auth-spinner" />
         </div>
@@ -300,7 +300,7 @@ export function EssenceEditor() {
   return (
     <div className="napkin-app h-screen overflow-hidden">
       {/* Top header */}
-      <NotebookHeader onCreate={createNewDoc} docScore={docScore} saved={isSaved} />
+      <NotebookHeader onCreate={createNewDoc} onScan={handleScan} docScore={docScore} saved={isSaved} />
 
       {/* Body: sidebar + main */}
       <div className="napkin-body overflow-hidden">

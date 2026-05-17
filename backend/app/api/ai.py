@@ -31,8 +31,10 @@ async def get_ai_score(input_data: AIScoreInput):
     async with httpx.AsyncClient() as client:
         try:
             if not settings.RYNE_COOKIE:
+                print("DEBUG: RYNE_COOKIE is missing")
                 raise HTTPException(status_code=503, detail="RYNE_COOKIE is not configured")
 
+            print(f"DEBUG: Sending request to Ryne AI with text length: {len(input_data.documentText)}")
             response = await client.post(
                 "https://ryne.ai/api/ai-score",
                 headers={
@@ -43,34 +45,49 @@ async def get_ai_score(input_data: AIScoreInput):
                 json={"text": input_data.documentText},
                 timeout=30.0
             )
-            print(response.status_code, response.text)  # Debug log for response
+            
+            print(f"DEBUG: Ryne AI Response Status: {response.status_code}")
+            if response.status_code != 200:
+                print(f"DEBUG: Ryne AI Error Body: {response.text}")
+                
             response.raise_for_status()
+            
             try:
                 result = response.json()
+                print(f"DEBUG: Ryne AI Full Response: {result}")
             except ValueError as exc:
+                print(f"DEBUG: Ryne AI returned invalid JSON: {response.text}")
                 return build_fallback_ai_score(
                     input_data.documentText,
                     "AI score service returned invalid JSON; using local fallback analysis.",
                 )
 
-            classification = result.get("classification") or result.get("details", {}).get("classification") or "UNKNOWN"
-            confidence = result.get("aiScore") if result.get("aiScore") is not None else result.get("details", {}).get("fakePercentage", 0)
+            # Extract data with more defensive logging
+            details = result.get("details", {})
+            classification = result.get("classification") or details.get("classification") or "UNKNOWN"
+            confidence = result.get("aiScore") if result.get("aiScore") is not None else details.get("fakePercentage", 0)
+            
+            print(f"DEBUG: Classification: {classification}, Confidence: {confidence}")
             
             sentences = []
-            for s in result.get("details", {}).get("sentences", []):
+            raw_sentences = details.get("sentences", [])
+            print(f"DEBUG: Found {len(raw_sentences)} sentences in response")
+            
+            for s in raw_sentences:
                 sentences.append({
                     "text": s.get("text"),
                     "aiProbability": s.get("aiProbability") if s.get("aiProbability") is not None else (100 if s.get("isAI") else 0),
                     "isAI": bool(s.get("isAI"))
                 })
                 
-            feedback = result.get("details", {}).get("feedback") or ("Human Written" if classification == "HUMAN_ONLY" else "AI Detected")
+            feedback = details.get("feedback") or ("Human Written" if classification == "HUMAN_ONLY" else "AI Detected")
 
             return AIScoreOutput(classification=classification, confidence=confidence, sentences=sentences, feedback=feedback)
 
         except HTTPException:
             raise
         except httpx.HTTPStatusError as exc:
+            print(f"DEBUG: HTTPStatusError: {exc.response.status_code} - {exc.response.text}")
             if exc.response.status_code >= 500:
                 return build_fallback_ai_score(
                     input_data.documentText,
@@ -80,11 +97,13 @@ async def get_ai_score(input_data: AIScoreInput):
             detail = exc.response.text.strip() if exc.response.text else str(exc)
             raise HTTPException(status_code=exc.response.status_code, detail=detail[:200]) from exc
         except httpx.RequestError as exc:
+            print(f"DEBUG: RequestError: {str(exc)}")
             return build_fallback_ai_score(
                 input_data.documentText,
                 "AI score service could not be reached; using local fallback analysis.",
             )
         except Exception as e:
+            print(f"DEBUG: Unexpected Exception: {str(e)}")
             raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/humanize", response_model=HumanizeOutput)
