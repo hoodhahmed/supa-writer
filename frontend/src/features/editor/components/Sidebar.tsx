@@ -121,7 +121,7 @@ export function Sidebar({
               </div>
               <div className="flex-1 min-w-0">
                 <div className={cn(
-                  'text-sm truncate leading-tight',
+                  'text-sm leading-tight line-clamp-2 break-words',
                   currentDocId === doc.id ? 'font-bold text-[#1A1A1A]' : 'font-medium text-[#475569]'
                 )}>
                   {doc.title || 'Untitled'}

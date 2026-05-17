@@ -4,6 +4,7 @@
 
 :root {
   --napkin-header-height: 64px;
+  --napkin-sidebar-width: 280px;
   --paper-ivory: #FFFDF9;
   --paper-white: #FFFFFF;
   --ink-charcoal: #2C2F31;
@@ -172,6 +173,8 @@
 /* ---- Sidebar ---- */
 .napkin-sidebar {
   width: var(--napkin-sidebar-width);
+  max-width: var(--napkin-sidebar-width);
+  min-width: var(--napkin-sidebar-width);
   background: var(--paper-white);
   border-right: 1px solid rgba(0, 0, 0, 0.04);
   display: flex;
@@ -347,6 +350,13 @@
 .napkin-doc-menu:hover {
   background: #F1F5F9;
   color: #EF4444;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
 }
 
 

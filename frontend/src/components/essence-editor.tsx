@@ -317,7 +317,7 @@ export function EssenceEditor() {
 
         {/* Main content area */}
         <main className="napkin-main">
-          <NotebookCanvas isRewriting={isHumanizing}>
+          <NotebookCanvas isRewriting={isHumanizing} isScanning={isScanning}>
             <EditorContent
               ref={editorRef}
               currentDocId={currentDocId}
