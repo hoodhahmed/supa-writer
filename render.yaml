@@ -1,0 +1,34 @@
+services:
+  # 1. Backend Service (Python/FastAPI)
+  - type: web
+    name: supa-writer-backend
+    env: python
+    region: ohio # or your preferred region
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: SUPABASE_URL
+        sync: false # Set this in the Render Dashboard
+      - key: SUPABASE_KEY
+        sync: false
+      - key: RYNE_COOKIE
+        sync: false
+      - key: WRITEHUMAN_COOKIE
+        sync: false
+
+  # 2. Frontend Service (TypeScript/Vite)
+  - type: web # or 'static' if it's a pure SPA
+    name: supa-writer-frontend
+    env: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start # Adjust based on your package.json
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: supa-writer-backend
+          type: web
+          property: host
