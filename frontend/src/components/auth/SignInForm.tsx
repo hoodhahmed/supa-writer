@@ -24,7 +24,18 @@ export function SignInForm({ onClose }: { onClose?: () => void }) {
       }
       onClose?.();
     } catch (err: any) {
-      setError(err?.message || JSON.stringify(err));
+      let msg = err?.detail || err?.message || JSON.stringify(err);
+      if (typeof msg === 'string' && msg.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(msg);
+          msg = parsed.msg || parsed.detail || msg;
+          if (typeof msg === 'string' && msg.startsWith('{')) {
+            const inner = JSON.parse(msg);
+            msg = inner.msg || inner.error_description || msg;
+          }
+        } catch (e) {}
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

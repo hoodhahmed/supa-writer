@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/services/useAuth';
+import { X, Check } from 'lucide-react';
 
 import { motion } from 'framer-motion';
 
@@ -45,7 +46,21 @@ export function AuthPage() {
         // App.tsx re-renders automatically because token changes
       }
     } catch (err: any) {
-      const msg = err?.message || err?.error_description || JSON.stringify(err);
+      let msg = err?.detail || err?.message || err?.error_description || JSON.stringify(err);
+      
+      // If the error is a JSON string (common with FastAPI/Supabase), try to parse it
+      if (typeof msg === 'string' && msg.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(msg);
+          msg = parsed.msg || parsed.detail || msg;
+          // Sometimes it's double nested
+          if (typeof msg === 'string' && msg.startsWith('{')) {
+            const inner = JSON.parse(msg);
+            msg = inner.msg || inner.error_description || msg;
+          }
+        } catch (e) {}
+      }
+      
       setError(msg);
     } finally {
       setLoading(false);
