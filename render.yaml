@@ -23,7 +23,7 @@ services:
     name: supa-writer-frontend
     plan: free
     rootDir: frontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && npm run dev -- --host
     publish: dist
     envVars:
       - key: VITE_API_URL
