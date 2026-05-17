@@ -8,7 +8,7 @@ export interface Document {
   lastModified: number;
 }
 
-export function useDocuments() {
+export function useDocuments(limit: number = 20) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [currentDocId, setCurrentDocId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,7 +18,7 @@ export function useDocuments() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const docs = await api.getDocuments();
+        const docs = await api.getDocuments(limit);
         if (!mounted) return;
         setDocuments(docs);
         if (docs.length > 0 && !currentDocId) setCurrentDocId(docs[0].id);
@@ -32,7 +32,7 @@ export function useDocuments() {
     loadData();
     return () => { mounted = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [limit]);
 
   const saveCurrentDoc = useCallback(async (id: string | null, contentRef?: HTMLDivElement | null) => {
     if (!id || !contentRef) return;

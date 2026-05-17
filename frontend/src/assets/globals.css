@@ -2,129 +2,145 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
 :root {
-  /* Notebook Premium Palette */
-  --background: #ffffff;
+  /* User-Defined Palette */
+  --background: #f7f7f7;
   --paper: #ffffff;
-  --foreground: #2c2f31;
-  --secondary: #5e6266;
-  --accent: #33C3FF;
-  --border: #f0f4f7;
-  --notebook-lines: #EFEFEF;
-  --notebook-margin: #F2CACA;
-  --success: #10B981;
+  --foreground: #484848;
+  --secondary: #64748B;
+  
+  /* Box Color 1 (Purple) */
+  --box-1-bg: #faf0fe;
+  --box-1-text: #b960e2;
+  
+  /* Box Color 2 (Blue/Highlight) */
+  --box-2-bg: #e8f9ff;
+  --box-2-text: #1ac6ff;
+  --accent: #1ac6ff;
+  --accent-soft: #e8f9ff;
+  
+  /* Box Color 3 (Orange) */
+  --box-3-bg: #fef4eb;
+  --box-3-text: #f9b239;
 
-  /* Primary Action Colors */
-  --primary-btn-bg: #30363c;
-  --primary-btn-hover: #000000;
-  --primary-btn-text: #ffffff;
+  --border: rgba(72, 72, 72, 0.08);
+  --border-strong: rgba(72, 72, 72, 0.12);
+  
+  /* Actions */
+  --primary-btn-bg: #484848;
+  --primary-btn-text: #f7f7f7;
 
-  /* Secondary Action Colors */
-  --secondary-btn-bg: #eaeff2;
-  --secondary-btn-hover: #d4dae0;
-  --secondary-btn-text: #2c2f31;
+  /* Fonts */
+  --font-creative: "Shantell Sans", cursive;
+  --font-sans: 'Geomanist', system-ui, -apple-system, sans-serif;
 
-  /* Surface & Container Colors */
-  --surface-light: #f0f4f7;
-  --surface-hover: #e9eff4;
-  --surface-expanded: #dee4e9;
-
-  /* Borders & Separators */
-  --separator-border: #f0f4f7;
-  --footer-border: #e4eaed;
-
-  /* Toggle Colors */
-  --toggle-on: #30363c;
-  --toggle-off: #667481;
-  --toggle-knob: #ffffff;
-
-  /* Modal Overlay */
-  --modal-overlay: rgba(0, 0, 0, 0.65);
-
-  /* Legacy CSS vars for compatibility */
-  --primary: #30363c;
-  --primary-foreground: #ffffff;
-  --secondary-foreground: #2c2f31;
-  --accent-foreground: #000000;
-  --destructive: #FF3B30;
-  --destructive-foreground: #FFFFFF;
-  --muted: #f0f4f7;
-  --muted-foreground: #5e6266;
-  --ring: #30363c;
-  --popover: #ffffff;
-  --popover-foreground: #2c2f31;
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(72, 72, 72, 0.04);
+  --shadow-md: 0 4px 12px rgba(72, 72, 72, 0.06);
+  --shadow-lg: 0 8px 24px rgba(72, 72, 72, 0.08);
 }
 
-/* Local font faces (Geomanist) */
-@font-face {
-  font-family: 'Geomanist';
-  src: url('./fonts/geomanist-regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Geomanist';
-  src: url('./fonts/geomanist-medium.woff2') format('woff2');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Geomanist';
-  src: url('./fonts/geomanist-book.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Geomanist';
-  src: url('./fonts/geomanist-regular-italic.woff2') format('woff2');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-:root {
-  --font-sans: 'Geomanist', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-}
-
-* {
-  @apply border-border;
+/* GLOBAL SCROLL RESET */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: auto;
+  min-height: 100%;
 }
 
 body {
-  @apply bg-background text-foreground;
   font-family: var(--font-sans);
-  font-feature-settings: "kern" 1;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-y: scroll; /* Force native scrollbar */
 }
 
-/* Smooth transitions for UI elements */
-button {
-  @apply transition-all duration-200;
-}
-
-/* Dot grid background used on marketing pages */
-.dot-grid {
+#root {
   width: 100%;
-  height: 100%;
-  background-color: rgb(229, 231, 235);
-  background-image: radial-gradient(circle, rgb(100, 100, 100) 0.5px, transparent 0.5px);
-  background-size: 24px 24px;
-  opacity: 1;
+  min-height: 100vh;
 }
 
-/* Hero highlight */
-.hero-highlight {
-  background: #eaeff2;
-  padding: 0 0.25rem;
-  border-radius: 2px;
+/* Creative Text Utility */
+.font-creative {
+  font-family: var(--font-creative);
 }
 
-input, textarea {
-  @apply transition-all duration-200;
+/* Custom Box Utilities */
+.box-1 { background-color: var(--box-1-bg); }
+.box-1-text { color: var(--box-1-text); }
+
+.box-2 { background-color: var(--box-2-bg); }
+.box-2-text { color: var(--box-2-text); }
+
+.box-3 { background-color: var(--box-3-bg); }
+.box-3-text { color: var(--box-3-text); }
+
+/* Premium Button Redefinition */
+.premium-btn-primary {
+  @apply bg-[#484848] text-[#f7f7f7] font-bold px-6 py-2.5 rounded-xl transition-all active:scale-[0.98] disabled:opacity-50;
+}
+
+.premium-btn-accent {
+  @apply bg-[#1ac6ff] text-[#f7f7f7] font-bold px-6 py-2.5 rounded-xl transition-all active:scale-[0.98] disabled:opacity-50;
+}
+
+/* Global Transition */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Modern Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
+
+/* Premium Card */
+.premium-card {
+  @apply bg-white border border-border-strong rounded-2xl transition-all;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================================
+   NAPKIN APP LAYOUT
+   ============================================================ */
+
+.napkin-header {
+  height: 72px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-strong);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  z-index: 100;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.napkin-header-left, .napkin-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Ensure avatar looks high-end */
+.napkin-avatar {
+  @apply h-8 w-8 rounded-full bg-[#484848] text-[#f7f7f7] flex items-center justify-center font-bold text-xs shadow-sm;
 }
 
 /* ============================================================
@@ -133,351 +149,66 @@ input, textarea {
 
 .auth-page {
   min-height: 100vh;
-  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: hidden;
-  background-color: #ffffff;
 }
 
-/* Dot grid background */
 .auth-bg-dots {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(44, 47, 49, 0.1) 1px, transparent 1px);
-  background-size: 18px 18px;
+  background-image: radial-gradient(#484848 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+  opacity: 0.05;
   pointer-events: none;
 }
 
-/* Auth card */
 .auth-card {
   position: relative;
   z-index: 10;
   background: #FFFFFF;
-  border-radius: 16px;
-  padding: 40px 44px;
+  border-radius: 24px;
+  padding: 48px;
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
-  border: 1px solid #e4eaed;
-}
-
-/* Mobile auth card adjustments */
-@media (max-width: 640px) {
-  .auth-card {
-    margin: 0 16px;
-    padding: 32px 24px;
-    border-radius: 12px;
-  }
-
-  .auth-page {
-    padding: 20px 0;
-  }
-
-  .auth-title {
-    font-size: 20px;
-  }
-
-  .auth-subtitle {
-    font-size: 13px;
-  }
-
-  .auth-input,
-  .auth-submit-btn {
-    font-size: 16px;
-  }
-
-  .auth-form {
-    gap: 14px;
-  }
-}
-
-/* Logo */
-.auth-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 28px;
-}
-
-.auth-logo-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  background: #1AABF0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.auth-logo-text {
-  font-family: 'Geomanist', sans-serif;
-  font-size: 17px;
-  font-weight: 600;
-  color: #2c2f31;
-  letter-spacing: -0.3px;
-}
-
-/* Titles */
-.auth-title {
-  font-family: 'Geomanist', sans-serif;
-  font-size: 22px;
-  font-weight: 600;
-  color: #2c2f31;
-  letter-spacing: -0.5px;
-  margin: 0 0 6px;
-}
-
-.auth-subtitle {
-  font-family: 'Geomanist', sans-serif;
-  font-size: 14px;
-  color: #5e6266;
-  margin: 0 0 28px;
-  letter-spacing: -0.1px;
-}
-
-/* Form */
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.auth-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.auth-label {
-  font-family: 'Geomanist', sans-serif;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: #5e6266;
-  letter-spacing: -0.1px;
+  max-width: 440px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-strong);
 }
 
 .auth-input {
-  font-family: 'Geomanist', sans-serif;
-  font-size: 14px;
-  color: #2c2f31;
-  background: #fafafa;
-  border: 1px solid #e4eaed;
-  border-radius: 8px;
-  padding: 10px 14px;
-  outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  width: 100%;
+  @apply w-full px-4 py-3 rounded-xl bg-[#f7f7f7] border border-transparent focus:border-[#1ac6ff] focus:bg-white focus:ring-4 focus:ring-[#1ac6ff]/10 outline-none transition-all;
 }
-.auth-input:focus {
-  border-color: #30363c;
-  box-shadow: 0 0 0 3px rgba(48, 54, 60, 0.12);
-  background: #FFFFFF;
-}
-.auth-input::placeholder { color: #a8aeb5; }
-
-/* Messages */
-.auth-error {
-  font-family: 'Geomanist', sans-serif;
-  font-size: 12.5px;
-  color: #E53E3E;
-  background: #FFF5F5;
-  border: 1px solid #FED7D7;
-  border-radius: 6px;
-  padding: 9px 12px;
-}
-
-.auth-info {
-  font-family: 'Geomanist', sans-serif;
-  font-size: 12.5px;
-  color: #276749;
-  background: #F0FFF4;
-  border: 1px solid #C6F6D5;
-  border-radius: 6px;
-  padding: 9px 12px;
-}
-
-/* Submit button */
-.auth-submit-btn {
-  font-family: 'Geomanist', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #ffffff;
-  background: #30363c;
-  border: none;
-  border-radius: 8px;
-  padding: 11px 20px;
-  cursor: pointer;
-  width: 100%;
-  letter-spacing: -0.1px;
-  transition: background 0.15s, opacity 0.15s;
-  margin-top: 4px;
-}
-.auth-submit-btn:hover:not(:disabled) { background: #000000; }
-.auth-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-/* Switch mode */
-.auth-switch {
-  margin-top: 20px;
-  text-align: center;
-  font-family: 'Geomanist', sans-serif;
-  font-size: 13px;
-  color: #888888;
-}
-
-.auth-switch-btn {
-  background: none;
-  border: none;
-  color: #30363c;
-  font-family: 'Geomanist', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  margin-left: 4px;
-  transition: color 0.12s;
-}
-.auth-switch-btn:hover { color: #000000; text-decoration: underline; }
 
 /* Loading spinner */
 .auth-spinner {
-  width: 28px;
-  height: 28px;
-  border: 2px solid #E8E8E8;
-  border-top-color: #1AABF0;
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(72, 72, 72, 0.1);
+  border-top-color: #1ac6ff;
   border-radius: 50%;
-  animation: spinner-rotate 0.7s linear infinite;
+  animation: spinner-rotate 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes spinner-rotate {
   to { transform: rotate(360deg); }
 }
 
+/* Glass Utility */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
 /* ============================================================
-   RESPONSIVE DESIGN - MARKETING & DASHBOARD
+   RESPONSIVE DESIGN
    ============================================================ */
 
-/* Tablet and mobile adjustments for marketing pages */
-@media (max-width: 768px) {
-  .dot-grid {
-    background-size: 20px 20px;
-  }
-
-  header {
-    padding: 12px 16px !important;
-  }
-
-  main {
-    padding: 12px 16px !important;
-  }
-
-  /* Hero section responsive */
-  .hero-highlight {
-    display: inline;
-  }
-}
-
-/* Mobile breakpoint (640px and below) */
 @media (max-width: 640px) {
-  /* Dashboard */
-  .dashboard-header {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* Marketing pages */
-  header {
-    padding: 12px 12px !important;
-  }
-
-  header nav {
-    display: none;
-  }
-
-  header .flex {
-    justify-content: space-between;
-    width: 100%;
-  }
-
-  main {
-    padding: 12px 12px !important;
-  }
-
-  /* Pricing cards */
-  .pricing-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  /* Feature grid */
-  .feature-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  /* Buttons responsive */
-  .button {
-    width: 100%;
-    padding: 12px 16px;
-    font-size: 14px;
-  }
-
-  /* Text sizing for mobile */
-  h1 {
-    font-size: 28px !important;
-    line-height: 1.2 !important;
-  }
-
-  h2 {
-    font-size: 20px !important;
-  }
-
-  h3 {
-    font-size: 16px !important;
-  }
-
-  p {
-    font-size: 14px !important;
-  }
-
-  /* Dot grid tighter on mobile */
-  .dot-grid {
-    background-size: 16px 16px;
-  }
-
-  /* Auth page mobile */
-  .auth-page {
-    min-height: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-}
-
-/* Ultra-small mobile (480px and below) */
-@media (max-width: 480px) {
-  h1 {
-    font-size: 24px !important;
-  }
-
-  h2 {
-    font-size: 18px !important;
-  }
-
-  .button {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  .dot-grid {
-    background-size: 14px 14px;
-  }
+  h1 { font-size: 32px !important; }
+  h2 { font-size: 24px !important; }
+  .napkin-header { padding: 0 16px; }
+  .auth-card { padding: 32px 24px; }
 }

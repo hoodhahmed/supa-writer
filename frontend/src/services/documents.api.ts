@@ -1,8 +1,8 @@
 import apiClient from '@/services/clients/apiClient';
 
 export const documentsApi = {
-  getDocuments: async () => {
-    const res = await apiClient.get('/documents');
+  getDocuments: async (limit: number = 20) => {
+    const res = await apiClient.get('/documents', { params: { limit } });
     return res.data;
   },
 

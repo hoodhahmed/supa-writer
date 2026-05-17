@@ -1,92 +1,77 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { EssenceEditor } from '@/components/essence-editor';
-import { AuthPage } from '@/components/auth/AuthPage';
-import ProfilePage from '@/components/auth/ProfilePage';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import { useAuth } from '@/services/useAuth';
-import { LandingPage, AboutPage, PricingPage } from '@/components/marketing/site-pages';
-import Dashboard from './components/dashboard/Dashboard';
+import { AppProvider } from '@/context/AppContext';
+
+// Lazy load components
+const EssenceEditor = lazy(() => import('@/components/essence-editor').then(m => ({ default: m.EssenceEditor })));
+const AuthPage = lazy(() => import('@/components/auth/AuthPage').then(m => ({ default: m.AuthPage })));
+const ProfilePage = lazy(() => import('@/components/auth/ProfilePage'));
+const Dashboard = lazy(() => import('@/components/dashboard/Dashboard'));
+const LandingPage = lazy(() => import('@/components/marketing/site-pages').then(m => ({ default: m.LandingPage })));
+const AboutPage = lazy(() => import('@/components/marketing/site-pages').then(m => ({ default: m.AboutPage })));
+const PricingPage = lazy(() => import('@/components/marketing/site-pages').then(m => ({ default: m.PricingPage })));
+
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="w-full min-h-screen">
+    {children}
+  </div>
+);
+
+const LoadingFallback = () => (
+  <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f7f7]">
+    <div className="auth-spinner" />
+  </div>
+);
 
 function AppRoutes() {
   const { token, loading } = useAuth();
+  const location = useLocation();
 
-  // While restoring auth state from localStorage, show nothing (avoids flash)
-  if (loading) {
-    return (
-      <div className="h-screen w-screen flex items-center justify-center bg-[#F4F8FB]">
-        <div className="auth-spinner" />
-      </div>
-    );
-  }
+  if (loading) return <LoadingFallback />;
 
   return (
-    <Routes>
-      {/* Public: sign-in / sign-up page */}
-      <Route
-        path="/auth"
-        element={token ? <Navigate to="/app" replace /> : <AuthPage />}
-      />
+    <Suspense fallback={<LoadingFallback />}>
+      <Routes location={location} key={location.pathname}>
+        <Route
+          path="/auth"
+          element={token ? <Navigate to="/app" replace /> : <PageWrapper><AuthPage /></PageWrapper>}
+        />
 
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/" element={<PageWrapper><LandingPage /></PageWrapper>} />
+        <Route path="/about" element={<PageWrapper><AboutPage /></PageWrapper>} />
+        <Route path="/pricing" element={<PageWrapper><PricingPage /></PageWrapper>} />
 
-      {/* Protected: editor — redirect to /auth if not signed in */}
-      <Route
-        path="/app"
-        element={
-          token ? (
-            <main className="h-screen w-screen bg-background">
-              <EssenceEditor />
-            </main>
-          ) : (
-            <Navigate to="/auth" replace />
-          )
-        }
-      />
+        <Route
+          path="/app"
+          element={token ? <PageWrapper><EssenceEditor /></PageWrapper> : <Navigate to="/auth" replace />}
+        />
 
-      {/* Dashboard */}
-      <Route
-        path="/dashboard"
-        element={
-          token ? (
-            <main className="h-screen w-screen bg-background">
-              <Dashboard />
-            </main>
-          ) : (
-            <Navigate to="/auth" replace />
-          )
-        }
-      />
+        <Route
+          path="/dashboard"
+          element={token ? <PageWrapper><Dashboard /></PageWrapper> : <Navigate to="/auth" replace />}
+        />
 
-      {/* Profile */}
-      <Route
-        path="/profile"
-        element={
-          token ? (
-            <ProfilePage />
-          ) : (
-            <Navigate to="/auth" replace />
-          )
-        }
-      />
+        <Route
+          path="/profile"
+          element={token ? <PageWrapper><ProfilePage /></PageWrapper> : <Navigate to="/auth" replace />}
+        />
 
-      <Route
-        path="/editor"
-        element={<Navigate to="/app" replace />}
-      />
-
-      {/* Catch-all */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="/editor" element={<Navigate to="/app" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <AppRoutes />
-      <Toaster />
+      <AppProvider>
+        <AppRoutes />
+        <Toaster />
+      </AppProvider>
     </BrowserRouter>
   );
 }

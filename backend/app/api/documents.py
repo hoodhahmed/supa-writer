@@ -28,6 +28,7 @@ def get_user_id_from_token(authorization: Optional[str] = Header(default=None)) 
 @router.get("", response_model=List[DocumentResponse])
 @router.get("/", response_model=List[DocumentResponse])
 def get_documents(
+    limit: int = 20,
     user_id: str = Depends(get_user_id_from_token),
     supabase: Client = Depends(get_supabase_client),
 ):
@@ -37,6 +38,7 @@ def get_documents(
             .select("*")
             .eq("user_id", user_id)
             .order("lastModified", desc=True)
+            .limit(limit)
             .execute()
         )
         return response.data or []

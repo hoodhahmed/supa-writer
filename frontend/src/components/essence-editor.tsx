@@ -40,7 +40,7 @@ export function EssenceEditor() {
   const SuggestionPanelAny = SuggestionPanel as unknown as ComponentType<any>;
   
   // 1. All Hooks & State at the top
-  const { documents, currentDocId, saveCurrentDoc: persistDocument, createNewDoc, deleteDoc, setCurrentDocId } = useDocuments();
+  const { documents, currentDocId, saveCurrentDoc: persistDocument, createNewDoc, deleteDoc, setCurrentDocId, loading: docsLoading } = useDocuments();
   
   const {
     selection: editorSelection,
@@ -282,17 +282,28 @@ export function EssenceEditor() {
     setVersionIndex((i: number) => Math.min(versions.length - 1, i + 1));
   }, [versions.length]);
 
+  if (docsLoading) {
+    return (
+      <div className="napkin-app h-screen w-screen flex flex-col">
+        <NotebookHeader onCreate={createNewDoc} docScore={docScore} saved={isSaved} />
+        <div className="flex-1 flex items-center justify-center bg-[#F4F8FB]">
+          <div className="auth-spinner" />
+        </div>
+      </div>
+    );
+  }
+
   const filteredDocs = documents.filter((d: any) =>
     (d.title || '').toLowerCase().includes((searchQuery || '').toLowerCase())
   );
 
   return (
-    <div className="napkin-app">
+    <div className="napkin-app h-screen overflow-hidden">
       {/* Top header */}
       <NotebookHeader onCreate={createNewDoc} docScore={docScore} saved={isSaved} />
 
       {/* Body: sidebar + main */}
-      <div className="napkin-body">
+      <div className="napkin-body overflow-hidden">
         {/* Left sidebar */}
         <Sidebar
           documents={filteredDocs}

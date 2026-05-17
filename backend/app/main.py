@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import documents, ai
+from app.api import documents, ai, stats
 from app.api import auth
 
 app = FastAPI(title="SupaWriter API", version="1.0.0")
@@ -16,6 +16,7 @@ app.add_middleware(
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["documents"])
 app.include_router(ai.router, prefix="/api/v1/ai", tags=["ai"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
+app.include_router(stats.router, prefix="/api/v1/stats", tags=["stats"])
 
 @app.get("/health")
 def health_check():

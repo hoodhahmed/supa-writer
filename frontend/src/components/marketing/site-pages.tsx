@@ -1,5 +1,6 @@
 import { useState, type ComponentType, type FC, type PropsWithChildren } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Check,
@@ -10,44 +11,75 @@ import {
   PenTool,
   Menu,
   X,
+  Play,
+  Star,
+  ZapOff,
+  MoveRight,
+  ChevronDown
 } from "lucide-react";
+import { useAuth } from "@/services/useAuth";
 
-type Feature = {
-  id: string;
-  title: string;
-  description: string;
-  Icon: ComponentType<any>;
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 }
+  }
 };
 
-const features: Feature[] = [
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.23, 1, 0.32, 1] } }
+};
+
+const tiers = [
   {
-    id: "natural-flow",
-    title: "Natural sentence variation",
-    description: "Keeps your writing moving with cleaner rhythm and less repetitive structure.",
-    Icon: Sparkles,
+    id: "free",
+    name: "Free",
+    price: "$0",
+    subtitle: "Ideal for occasional writers",
+    features: [
+      "300 words/month humanization",
+      "30 AI checks/month",
+      "Rate limit: 1 request per minute",
+      "Queue delay"
+    ],
   },
   {
-    id: "meaning-intact",
-    title: "Keeps original meaning intact",
-    description: "Refines the delivery while preserving the ideas, facts, and intent already on the page.",
-    Icon: Shield,
+    id: "pro",
+    name: "Pro",
+    price: "$9",
+    subtitle: "Core monetization tier",
+    badge: "Most Popular",
+    features: [
+      "25,000 words/month humanization",
+      "1,000 AI checks/month",
+      "Faster processing",
+      "Input allowed 1,000 words per request"
+    ],
   },
   {
-    id: "fast-processing",
-    title: "Fast processing",
-    description: "Improves text quickly so you can move from rough draft to final copy without friction.",
-    Icon: Zap,
+    id: "ultra",
+    name: "Ultra",
+    price: "$22",
+    subtitle: "Power users",
+    features: [
+      "100,000 words/month",
+      "5,000 AI checks/month",
+      "Priority queue",
+      "Unlimited custom brand tones"
+    ],
   },
 ];
 
-const problems: string[] = [
-  "Too rigid",
+const problems = [
+  "Too rigid and mechanical",
   "Repetitive in structure",
   "Overly formal or generic",
   "Easy to detect as machine-generated",
 ];
 
-const improvements: string[] = [
+const improvements = [
   "Flow and readability",
   "Sentence variation",
   "Tone consistency",
@@ -56,283 +88,199 @@ const improvements: string[] = [
 
 const howItWorks = [
   {
-    step: "1",
+    step: "01",
     title: "Paste your text",
-    description: "Drop in AI-generated content, drafts, or notes.",
+    description: "Drop in AI-generated content, drafts, or notes into our minimal editor.",
   },
   {
-    step: "2",
+    step: "02",
     title: "Improve structure",
-    description: "Supa Write adjusts rhythm, wording, and clarity.",
+    description: "Supa Write automatically adjusts rhythm, wording, and human-like clarity.",
   },
   {
-    step: "3",
-    title: "Copy final output",
-    description: "Clean, readable text ready to publish or send.",
-  },
-];
-
-const useCases: string[] = [
-  "Blog posts",
-  "Academic assignments",
-  "Business emails",
-  "Marketing copy",
-  "Social media content",
-  "Reports and documentation",
-];
-
-const valuePoints: string[] = [
-  "Most tools rewrite everything.",
-  "Supa Write only improves how it reads.",
-  "No idea loss. No content distortion. No unnecessary rewriting.",
-];
-
-type Tier = {
-  id: string;
-  name: string;
-  price: string;
-  subtitle: string;
-  features: string[];
-  badge?: string;
-};
-
-const tiers: Tier[] = [
-  {
-    id: "free",
-    name: "FREE",
-    price: "$0",
-    subtitle: "Forever",
-    features: ["Core generation", "Basic templates", "Community support"],
-  },
-  {
-    id: "plus",
-    name: "PLUS",
-    price: "$9",
-    subtitle: "Popular",
-    badge: "Popular",
-    features: ["Everything in Free", "Priority queue", "More styles"],
-  },
-  {
-    id: "pro",
-    name: "PRO",
-    price: "$22",
-    subtitle: "Stand out",
-    features: ["Advanced controls", "Team sharing", "Commercial license"],
+    step: "03",
+    title: "Export final output",
+    description: "Get clean, readable text ready to publish or send to your team.",
   },
 ];
 
 export const SiteShell: FC<PropsWithChildren<{}>> = ({ children }) => {
   const [open, setOpen] = useState(false);
+  const { token } = useAuth();
   return (
-    <div className="min-h-screen bg-[#FFFFFF] text-[#111111] relative overflow-hidden">
-      {/* Dot grid background */}
-      <svg
-        className="pointer-events-none absolute inset-0 w-full h-full opacity-10"
-        xmlns="http://www.w3.org/2000/svg"
-        preserveAspectRatio="none"
-      >
-        <defs>
-          <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-            <circle cx="1" cy="1" r="1" fill="#2F2F2F" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#dots)" />
-      </svg>
+    <div className="min-h-screen bg-[#f7f7f7] text-[#484848] relative overflow-x-hidden">
+      {/* Premium Background */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] h-[800px] bg-gradient-to-b from-[#e8f9ff]/50 via-transparent to-transparent rounded-[100%] blur-3xl opacity-50" />
+      </div>
 
-      <header className="relative z-10 border-b border-gray-100 bg-transparent">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
-              <Link to="/" className="flex items-center gap-2">
-                <PenTool className="h-6 w-6 text-[#33C3FF]" />
-                <span className="font-semibold">Supa Write</span>
-              </Link>
-            </div>
-
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/about" className="hover:underline">
-                About
-              </Link>
-              <Link to="/pricing" className="hover:underline">
-                Pricing
-              </Link>
-              <Link to="/app" className="px-3 py-2 rounded bg-[#2F2F2F] text-white">
-                Try Supa Write
-              </Link>
-            </nav>
-
-            <div className="md:hidden">
-              <button
-                aria-label="Toggle menu"
-                onClick={() => setOpen((v) => !v)}
-                className="p-2 rounded bg-white border"
-              >
-                {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        <div
-          className={`md:hidden overflow-hidden transition-all duration-300 bg-white border-t ${
-            open ? "max-h-64" : "max-h-0"
-          }`}
-        >
-          <div className="px-4 py-4 space-y-2">
-            <Link to="/about" onClick={() => setOpen(false)} className="block">
-              About
-            </Link>
-            <Link to="/pricing" onClick={() => setOpen(false)} className="block">
-              Pricing
-            </Link>
-            <Link to="/app" onClick={() => setOpen(false)} className="block px-3 py-2 rounded bg-[#2F2F2F] text-white">
-              Try Supa Write
+      <header className="fixed top-0 left-0 right-0 z-[100] px-6 py-6">
+        <nav className="max-w-6xl mx-auto px-6 py-3 rounded-2xl glass border-border-strong flex items-center justify-between shadow-2xl shadow-black/[0.01]">
+          <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="bg-[#484848] p-1.5 rounded-xl group-hover:scale-110 transition-all shadow-xl shadow-black/10">
+                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                   <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                 </svg>
+              </div>
+              <span className="font-black text-2xl tracking-tighter text-[#484848]">Supa Write</span>
             </Link>
           </div>
-        </div>
+
+          <div className="hidden md:flex items-center gap-10">
+            <Link to="/app" className="text-xs font-black uppercase tracking-widest text-[#64748B] hover:text-[#484848] transition-colors">Editor</Link>
+            <Link to="/dashboard" className="text-xs font-black uppercase tracking-widest text-[#64748B] hover:text-[#484848] transition-colors">Dashboard</Link>
+            <Link to="/pricing" className="text-xs font-black uppercase tracking-widest text-[#64748B] hover:text-[#484848] transition-colors">Pricing</Link>
+            <Link to="/app" className="premium-btn-primary !py-2.5 !px-6 !text-xs !rounded-xl !shadow-none">
+               {token ? 'Launch App' : 'Try for Free'}
+            </Link>
+          </div>
+
+          <div className="md:hidden">
+            <button
+              aria-label="Toggle menu"
+              onClick={() => setOpen((v) => !v)}
+              className="p-2 rounded-xl bg-white border border-border-strong shadow-sm"
+            >
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </nav>
       </header>
 
-      <main className="relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-12">{children}</div>
+      <main className="relative z-10 pt-40">
+        <div className="max-w-6xl mx-auto px-6 md:px-8 pb-32">{children}</div>
       </main>
     </div>
   );
 };
 
 export const LandingPage: FC = () => {
+  const navigate = useNavigate();
   return (
     <SiteShell>
-      <section className="text-center py-12 max-w-4xl mx-auto">
-        <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gray-200 text-sm text-[#2F2F2F] bg-white">
-          Supa Write copy editor
-        </p>
-        <h1 className="mt-6 text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">
-          <span className="hero-highlight text-[#33C3FF]">Supa Write</span>
-          <br />
-          Make rough drafts sound natural.
-        </h1>
-        <p className="mt-5 max-w-3xl mx-auto text-lg md:text-xl text-[#2F2F2F] leading-relaxed">
-          Turn rough notes, AI drafts, and plain text into clean, on-brand copy without losing the message.
-        </p>
+      {/* Hero Section */}
+      <motion.section 
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="text-center py-20 max-w-5xl mx-auto"
+      >
+        <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#1ac6ff]/20 text-[10px] font-black uppercase tracking-[0.2em] text-[#1ac6ff] bg-[#e8f9ff] mb-10 shadow-sm">
+          <Sparkles className="h-3 w-3 fill-current" />
+          Powered by human intelligence
+        </motion.div>
+        
+        <motion.h1 variants={itemVariants} className="text-6xl md:text-[100px] font-black leading-[0.85] tracking-[-0.06em] text-[#484848] font-creative">
+          Make <span className="text-[#1ac6ff]">AI drafts</span><br />sound human.
+        </motion.h1>
+        
+        <motion.p variants={itemVariants} className="mt-12 max-w-2xl mx-auto text-xl md:text-2xl text-[#64748B] leading-relaxed font-medium tracking-tight">
+          Turn mechanical drafts and notes into high-converting, natural copy. Preserving your message while improving the delivery.
+        </motion.p>
 
-        <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-          <Link to="/app" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded bg-[#33C3FF] text-white hover:opacity-90">
-            Try Supa Write
-            <ArrowRight className="h-4 w-4" />
+        <motion.div variants={itemVariants} className="mt-16 flex flex-col sm:flex-row justify-center items-center gap-8">
+          <Link to="/app" className="premium-btn-primary !px-12 !py-5 !text-xl flex items-center gap-3 !rounded-[20px] shadow-2xl shadow-black/20">
+            Start Writing
+            <MoveRight className="h-6 w-6" strokeWidth={3} />
           </Link>
-        </div>
-      </section>
+          <button className="flex items-center gap-4 font-black text-[#484848] hover:text-[#1ac6ff] transition-all group">
+            <div className="h-14 w-14 rounded-2xl border-2 border-border-strong flex items-center justify-center group-hover:border-[#1ac6ff] group-hover:scale-110 transition-all shadow-sm">
+              <Play className="h-5 w-5 fill-current" />
+            </div>
+            Watch Demo
+          </button>
+        </motion.div>
 
-      <section className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 rounded-lg border bg-white">
-          <h2 className="text-2xl font-bold">Why writers use it</h2>
-          <p className="mt-3 text-[#2F2F2F]">AI writing often feels:</p>
-          <ul className="mt-4 space-y-3">
-            {problems.map((problem) => (
-              <li key={problem} className="flex items-start gap-3">
-                <Check className="h-5 w-5 text-[#33C3FF] mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-[#2F2F2F]">{problem}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-5 text-lg font-medium">You don’t need new ideas.</p>
-          <p className="text-lg font-medium">You need better expression.</p>
-        </div>
+        {/* Scroll Indicator */}
+        <motion.div variants={itemVariants} className="mt-32 flex flex-col items-center gap-4 text-[#94A3B8]">
+           <span className="text-[10px] font-black uppercase tracking-[0.3em]">Explore Features</span>
+           <motion.div 
+             animate={{ y: [0, 8, 0] }}
+             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+           >
+             <ChevronDown size={20} strokeWidth={3} />
+           </motion.div>
+        </motion.div>
+      </motion.section>
 
-        <div className="p-6 rounded-lg border bg-white">
-          <h2 className="text-2xl font-bold">What Supa Write fixes</h2>
-          <p className="mt-3 text-[#2F2F2F]">
-            Supa Write refines your writing, not replaces it.
-          </p>
-          <p className="mt-4 text-[#2F2F2F]">It takes existing text and improves:</p>
-          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {improvements.map((improvement) => (
-              <li key={improvement} className="flex items-start gap-3 p-4 rounded border bg-[#FBFDFF]">
-                <Check className="h-5 w-5 text-[#33C3FF] mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-[#2F2F2F]">{improvement}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-5 text-[#2F2F2F]">Your message stays the same. The delivery improves.</p>
-        </div>
-      </section>
+      {/* Feature Section with Box Colors */}
+      <motion.section 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        variants={containerVariants}
+        className="mt-40 grid grid-cols-1 md:grid-cols-3 gap-8"
+      >
+        <motion.div variants={itemVariants} className="premium-card box-2 p-10 !rounded-[32px] border-none shadow-sm group hover:-translate-y-2 transition-all duration-500">
+           <div className="bg-white h-14 w-14 rounded-2xl flex items-center justify-center mb-8 shadow-sm text-[#1ac6ff]">
+              <Sparkles size={28} />
+           </div>
+           <h3 className="text-2xl font-black mb-4 tracking-tight">Natural sentence variation</h3>
+           <p className="text-[#484848]/80 font-medium leading-relaxed">Keeps your writing moving with cleaner rhythm and less repetitive structure.</p>
+        </motion.div>
 
-      <section className="mt-16">
-        <h2 className="text-2xl font-bold">How It Works</h2>
-        <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <motion.div variants={itemVariants} className="premium-card box-1 p-10 !rounded-[32px] border-none shadow-sm group hover:-translate-y-2 transition-all duration-500">
+           <div className="bg-white h-14 w-14 rounded-2xl flex items-center justify-center mb-8 shadow-sm text-[#b960e2]">
+              <Shield size={28} />
+           </div>
+           <h3 className="text-2xl font-black mb-4 tracking-tight">Meaning intact</h3>
+           <p className="text-[#484848]/80 font-medium leading-relaxed">Refines the delivery while preserving the ideas, facts, and intent already on the page.</p>
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="premium-card box-3 p-10 !rounded-[32px] border-none shadow-sm group hover:-translate-y-2 transition-all duration-500">
+           <div className="bg-white h-14 w-14 rounded-2xl flex items-center justify-center mb-8 shadow-sm text-[#f9b239]">
+              <Zap size={28} />
+           </div>
+           <h3 className="text-2xl font-black mb-4 tracking-tight">Fast processing</h3>
+           <p className="text-[#484848]/80 font-medium leading-relaxed">Improves text quickly so you can move from rough draft to final copy without friction.</p>
+        </motion.div>
+      </motion.section>
+
+      {/* Steps Section */}
+      <motion.section 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={containerVariants}
+        className="mt-48"
+      >
+        <motion.div variants={itemVariants} className="text-center mb-24">
+          <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-[#484848] font-creative">Your new workflow.</h2>
+        </motion.div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
           {howItWorks.map((item) => (
-            <div key={item.step} className="p-6 rounded-lg border bg-white hover:shadow-md transition">
-              <div className="text-sm font-semibold text-[#33C3FF]">{item.step}</div>
-              <h3 className="mt-2 text-lg font-semibold">{item.title}</h3>
-              <p className="mt-3 text-sm text-[#2F2F2F]">{item.description}</p>
-            </div>
+            <motion.div key={item.step} variants={itemVariants} className="group relative p-10 rounded-[40px] bg-white shadow-sm border border-border-strong hover:shadow-xl transition-all duration-500">
+              <div className="text-6xl font-black text-[#F1F5F9] group-hover:text-[#1ac6ff]/20 transition-colors mb-8">{item.step}</div>
+              <h3 className="text-2xl font-black mb-4 tracking-tight text-[#484848]">{item.title}</h3>
+              <p className="text-[#64748B] font-medium text-lg leading-relaxed">{item.description}</p>
+            </motion.div>
           ))}
         </div>
-      </section>
+      </motion.section>
 
-      <section className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-        {features.map((feature) => (
-          <div key={feature.id} className="p-6 rounded-lg border bg-white hover:shadow-md transition">
-            <div className="flex items-center gap-4">
-              <feature.Icon className="h-8 w-8 text-[#33C3FF]" />
-              <h3 className="text-lg font-semibold">{feature.title}</h3>
-            </div>
-            <p className="mt-3 text-sm text-[#2F2F2F]">{feature.description}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="mt-16">
-        <h2 className="text-2xl font-bold">Key Features</h2>
-        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[
-            "Natural sentence variation",
-            "Removes mechanical phrasing",
-            "Keeps original meaning intact",
-            "Fast processing",
-            "Works with any type of text",
-            "Simple copy-paste workflow",
-          ].map((feature) => (
-            <div key={feature} className="flex items-start gap-3 p-4 rounded border bg-white">
-              <Check className="h-5 w-5 text-[#33C3FF] mt-0.5 flex-shrink-0" />
-              <span className="text-sm text-[#2F2F2F]">{feature}</span>
-            </div>
-          ))}
+      {/* CTA Final */}
+      <motion.section 
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={itemVariants}
+        className="mt-60 text-center p-20 md:p-32 rounded-[60px] bg-[#484848] text-[#f7f7f7] relative overflow-hidden"
+      >
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#1ac6ff] rounded-full blur-[160px] opacity-10 -mr-96 -mt-96" />
+        <div className="relative z-10">
+          <h2 className="text-5xl md:text-[90px] font-black leading-[0.9] tracking-tighter mb-12 font-creative text-[#f7f7f7]">Ready to write?</h2>
+          <p className="text-[#f7f7f7]/60 text-xl md:text-2xl font-medium max-w-2xl mx-auto mb-16 tracking-tight">
+            Join thousands of writers who are making their content sound unmistakably human.
+          </p>
+          <button 
+            onClick={() => navigate('/app')}
+            className="bg-[#f7f7f7] text-[#484848] px-16 py-6 text-2xl font-black rounded-[24px] shadow-2xl hover:scale-105 transition-all"
+          >
+            Start Free
+          </button>
         </div>
-      </section>
-
-      <section className="mt-16">
-        <h2 className="text-2xl font-bold">Use Cases</h2>
-        <div className="mt-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {useCases.map((useCase) => (
-            <div key={useCase} className="p-4 rounded border bg-white">
-              <span className="text-sm font-medium text-[#2F2F2F]">{useCase}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-16 p-6 md:p-8 rounded-lg border bg-white">
-        <h2 className="text-2xl font-bold">Why Supa Write</h2>
-        <div className="mt-4 space-y-2 text-[#2F2F2F]">
-          {valuePoints.map((point) => (
-            <p key={point}>{point}</p>
-          ))}
-        </div>
-      </section>
-
-      <section className="mt-16 text-center p-8 rounded-lg border bg-[#F8FCFF]">
-        <h2 className="text-2xl md:text-3xl font-bold">Ready to rewrite?</h2>
-        <p className="mt-3 text-lg text-[#2F2F2F]">Stop sanding down every sentence by hand.</p>
-        <p className="text-lg text-[#2F2F2F]">Make your copy sound natural in seconds.</p>
-        <div className="mt-6">
-          <Link to="/app" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded bg-[#33C3FF] text-white hover:opacity-90">
-            Try Supa Write
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
+      </motion.section>
     </SiteShell>
   );
 };
@@ -340,68 +288,130 @@ export const LandingPage: FC = () => {
 export const AboutPage: FC = () => {
   return (
     <SiteShell>
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold">About Supa Write</h2>
-          <p className="mt-4 text-[#2F2F2F] max-w-2xl">
-            Supa Write helps writers turn rough or AI-generated text into natural, publish-ready copy.
-            The focus is simple: preserve meaning, improve clarity, and make the final result sound human.
-          </p>
-        </div>
-        <div className="p-6 rounded-lg border bg-white">
-          <div className="flex items-start gap-4">
-            <FileText className="h-6 w-6 text-[#33C3FF] mt-1 flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold">Our Mission</h3>
-              <p className="mt-2 text-sm text-[#2F2F2F]">
-                We believe good writing should sound clear, confident, and unmistakably human.
-              </p>
-            </div>
+      <motion.div 
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="max-w-4xl mx-auto py-12"
+      >
+        <motion.div variants={itemVariants} className="text-center mb-20">
+           <h1 className="text-7xl md:text-[100px] font-black tracking-[-0.06em] mb-6 text-[#484848] font-creative leading-none">Our Mission.</h1>
+           <p className="text-xl md:text-2xl text-[#64748B] font-medium tracking-tight">Why we believe writing should stay human.</p>
+        </motion.div>
+        
+        <motion.div variants={itemVariants} className="premium-card !rounded-[48px] p-16 space-y-16 bg-white shadow-sm border border-border-strong">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+             <div className="md:col-span-1">
+                <h2 className="text-2xl font-black tracking-tight uppercase text-[#484848]">The Mission</h2>
+             </div>
+             <div className="md:col-span-2">
+                <p className="text-[#484848] text-xl leading-relaxed font-medium">
+                  We believe that while AI can generate ideas at scale, it often lacks the soul and nuance of human expression. Supa Write was created to bridge that gap and preserve the art of communication.
+                </p>
+             </div>
           </div>
-        </div>
-      </div>
+          
+          <div className="h-px bg-border-strong w-full" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+             <div className="md:col-span-1">
+                <h2 className="text-2xl font-black tracking-tight uppercase text-red-400">The Problem</h2>
+             </div>
+             <div className="md:col-span-2">
+                <p className="text-[#64748B] text-xl leading-relaxed font-medium">
+                  The web is becoming saturated with mechanical, robotic content. This makes it harder for genuine voices to stand out and connect with their audience. Robots writing for robots is a race to the bottom.
+                </p>
+             </div>
+          </div>
+
+          <div className="h-px bg-border-strong w-full" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+             <div className="md:col-span-1">
+                <h2 className="text-2xl font-black tracking-tight uppercase text-[#1ac6ff]">The Solution</h2>
+             </div>
+             <div className="md:col-span-2">
+                <p className="text-[#484848] text-xl leading-relaxed font-medium">
+                  We developed proprietary linguistic models that analyze and restructure text to match natural human speech patterns, sentence variability, and emotional resonance.
+                </p>
+             </div>
+          </div>
+        </motion.div>
+      </motion.div>
     </SiteShell>
   );
 };
 
 export const PricingPage: FC = () => {
+  const navigate = useNavigate();
   return (
     <SiteShell>
-      <section>
-        <h2 className="text-3xl font-bold">Pricing</h2>
-        <p className="text-[#2F2F2F] mt-2">Simple plans that scale with your writing workflow.</p>
+      <motion.section
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="py-12"
+      >
+        <motion.div variants={itemVariants} className="text-center max-w-3xl mx-auto mb-24">
+          <h1 className="text-7xl md:text-[100px] font-black tracking-[-0.06em] mb-8 leading-[0.9] text-[#484848] font-creative">Simple.<br />Fair.</h1>
+          <p className="text-xl md:text-2xl text-[#64748B] font-medium leading-relaxed tracking-tight">Choose the plan that fits your writing volume. No hidden fees, no complexity.</p>
+        </motion.div>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 items-end">
           {tiers.map((t) => (
-            <div key={t.id} className={`p-6 rounded-lg border bg-white flex flex-col ${t.badge ? 'ring-2 ring-[#33C3FF]' : ''}`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold">{t.name}</h3>
-                  <p className="text-sm text-[#2F2F2F]">{t.subtitle}</p>
+            <motion.div 
+              key={t.id} 
+              variants={itemVariants}
+              className={`premium-card !rounded-[40px] p-12 relative flex flex-col group bg-white shadow-sm border border-border-strong ${t.badge ? 'border-[#1ac6ff] ring-[12px] ring-[#1ac6ff]/5 scale-105 z-10' : ''}`}
+            >
+              {t.badge && (
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-[#1ac6ff] text-white text-[10px] font-black uppercase tracking-[0.2em] px-6 py-2 rounded-full shadow-2xl">
+                  {t.badge}
                 </div>
-                {t.badge && <span className="px-2 py-1 text-xs bg-[#33C3FF] text-white rounded-full">{t.badge}</span>}
+              )}
+              
+              <div className="mb-12">
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#64748B] mb-6">{t.name}</h3>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-6xl font-black tracking-tighter text-[#484848]">{t.price}</span>
+                  <span className="text-[#94A3B8] font-black text-xl">/mo</span>
+                </div>
+                <p className="text-[#64748B] font-medium mt-6 text-base leading-snug">{t.subtitle}</p>
               </div>
 
-              <div className="mt-4">
-                <div className="text-3xl font-bold">{t.price}</div>
-                <ul className="mt-4 space-y-2">
-                  {t.features.map((f, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm text-[#2F2F2F]">
-                      <Check className="h-4 w-4 text-[#33C3FF]" /> {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <div className="h-px bg-border-strong w-full mb-10" />
 
-              <div className="mt-6">
-                <Link to="/app" className="inline-flex w-full justify-center items-center gap-2 px-4 py-2 rounded bg-[#2F2F2F] text-white hover:bg-[#1f1f1f]">
-                  Try Supa Write
-                </Link>
-              </div>
-            </div>
+              <ul className="space-y-6 mb-12 flex-1">
+                {t.features.map((f, i) => (
+                  <li key={i} className="flex items-start gap-4 text-sm font-bold text-[#484848]">
+                    <div className="h-6 w-6 rounded-full bg-[#1ac6ff]/10 flex items-center justify-center text-[#1ac6ff] flex-shrink-0 shadow-sm">
+                      <Check className="h-3.5 w-3.5" strokeWidth={4} />
+                    </div>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <button 
+                onClick={() => navigate('/app')}
+                className={`w-full py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 ${
+                  t.badge ? 'premium-btn-accent shadow-2xl shadow-[#1ac6ff]/30 text-white' : 'bg-[#f7f7f7] border-2 border-border-strong hover:border-[#484848] hover:bg-white text-[#484848]'
+                }`}
+              >
+                Start Writing
+                <MoveRight className="h-5 w-5" strokeWidth={3} />
+              </button>
+            </motion.div>
           ))}
         </div>
-      </section>
+
+        <motion.div variants={itemVariants} className="mt-32 p-16 rounded-[48px] glass border-border-strong text-center relative overflow-hidden group">
+          <div className="absolute -right-20 -top-20 h-64 w-64 bg-[#1ac6ff]/5 rounded-full blur-[100px] group-hover:bg-[#1ac6ff]/10 transition-all duration-1000" />
+          <p className="text-xs font-black text-[#64748B] uppercase tracking-[0.4em] mb-6">Enterprise Scaling</p>
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter mb-10 leading-tight text-[#484848]">Need a custom plan for<br />your organization?</h2>
+          <button className="premium-btn-primary !px-12 !py-5 !text-lg !rounded-2xl">Contact Sales Team</button>
+        </motion.div>
+      </motion.section>
     </SiteShell>
   );
 };
