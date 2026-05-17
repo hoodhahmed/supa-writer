@@ -116,6 +116,71 @@ export function ForensicOverlay({ sentences, editorRef }: ForensicOverlayProps) 
     };
   }, [calculateHighlights]);
 
+  const handleHighlightClick = useCallback((sentenceIdx: number) => {
+    const editor = editorRef && 'current' in editorRef ? editorRef.current : editorRef;
+    if (!sentences || !sentences[sentenceIdx] || !editor) return;
+
+    const sentence = sentences[sentenceIdx];
+    const normalizedSentence = sentence.text.trim();
+    
+    const textNodes: Text[] = [];
+    const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+    let node;
+    while ((node = walker.nextNode())) {
+      textNodes.push(node as Text);
+    }
+
+    const fullText = textNodes.map(n => n.textContent || '').join('');
+    
+    // We need to find the correct occurrence. Since we scan once and sentences are ordered, 
+    // we can find the N-th occurrence or use a similar logic to calculateHighlights.
+    // To be precise, let's just find the occurrence that matches our current search index.
+    let searchIndex = 0;
+    for (let i = 0; i < sentenceIdx; i++) {
+      const s = sentences[i].text.trim();
+      const foundIdx = fullText.indexOf(s, searchIndex);
+      if (foundIdx !== -1) searchIndex = foundIdx + s.length;
+    }
+
+    const idx = fullText.indexOf(normalizedSentence, searchIndex);
+    
+    if (idx !== -1) {
+      const range = document.createRange();
+      let startNode: Text | null = null;
+      let startOffset = 0;
+      let endNode: Text | null = null;
+      let endOffset = 0;
+      let cumulativeLen = 0;
+
+      for (const tNode of textNodes) {
+        const len = tNode.textContent?.length || 0;
+        if (!startNode && cumulativeLen + len > idx) {
+          startNode = tNode;
+          startOffset = idx - cumulativeLen;
+        }
+        if (cumulativeLen + len >= idx + normalizedSentence.length) {
+          endNode = tNode;
+          endOffset = (idx + normalizedSentence.length) - cumulativeLen;
+          break;
+        }
+        cumulativeLen += len;
+      }
+
+      if (startNode && endNode) {
+        range.setStart(startNode, startOffset);
+        range.setEnd(endNode, endOffset);
+        
+        const sel = window.getSelection();
+        if (sel) {
+          sel.removeAllRanges();
+          sel.addRange(range);
+          // Manually trigger selection change event if needed, 
+          // but browser usually does this.
+        }
+      }
+    }
+  }, [sentences, editorRef]);
+
   if (!sentences || sentences.length === 0) return null;
 
   return (
@@ -139,6 +204,10 @@ export function ForensicOverlay({ sentences, editorRef }: ForensicOverlayProps) 
             className="ai-highlight-box"
             onMouseEnter={() => setHoveredSentenceIdx(h.sentenceIdx)}
             onMouseLeave={() => setHoveredSentenceIdx(null)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleHighlightClick(h.sentenceIdx);
+            }}
             style={{
               position: 'absolute',
               top: h.top,
@@ -146,6 +215,7 @@ export function ForensicOverlay({ sentences, editorRef }: ForensicOverlayProps) 
               width: h.width,
               height: h.height,
               pointerEvents: 'auto',
+              cursor: 'pointer',
             }}
           />
           
