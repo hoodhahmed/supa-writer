@@ -58,7 +58,7 @@ export function useDocuments(limit: number = 20) {
 
   const createNewDoc = useCallback(async () => {
     const newDoc: Document = {
-      id: Math.random().toString(36).substring(7),
+      id: crypto.randomUUID(),
       title: 'Supa Write draft',
       content: '<h1>Supa Write</h1><p>Turn rough notes, AI drafts, and plain text into clean, natural copy that still sounds like you.</p><h2>What it fixes</h2><p>It smooths rhythm, trims repetition, and keeps the meaning intact so the result reads confidently across product copy, emails, and long-form writing.</p><h2>Best for</h2><p>Use Supa Write when you need polished drafts for blogs, reports, landing pages, and everyday communication.</p>',
       lastModified: Date.now()

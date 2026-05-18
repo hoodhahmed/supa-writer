@@ -37,7 +37,7 @@ def get_documents(
             supabase.table("documents")
             .select("*")
             .eq("user_id", user_id)
-            .order("lastModified", desc=True)
+            .order("lastmodified", desc=True)
             .limit(limit)
             .execute()
         )
@@ -57,7 +57,7 @@ def create_or_update_document(
         "id": doc.id,
         "title": doc.title,
         "content": doc.content,
-        "lastModified": doc.lastModified,
+        "lastmodified": doc.lastModified,
         "user_id": user_id,
     }
     try:

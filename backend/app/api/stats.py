@@ -26,11 +26,11 @@ def get_user_stats(
             # Initialize stats if not exist (only core DB columns)
             stats_data = {
                 "user_id": user_id,
-                "checksDone": 0,
-                "rephrasedCount": 0,
-                "wordsRephrased": 0,
-                "humanContent": "0%",
-                "aiContent": "0%"
+                "checksdone": 0,
+                "rephrasedcount": 0,
+                "wordsrephrased": 0,
+                "humancontent": "0%",
+                "aicontent": "0%"
             }
             res = supabase.table("user_stats").insert(stats_data).execute()
             stats = res.data[0]
@@ -38,7 +38,9 @@ def get_user_stats(
             stats = response.data[0]
         
         # Map derived/calculated values for the UI
-        stats["aiCreditsUsed"] = stats.get("wordsRephrased", 0)
+        # Pydantic will handle the mapping to camelCase if we pass it through UserStats
+        # but here it's a raw dict 'stats'.
+        stats["aiCreditsUsed"] = stats.get("wordsrephrased", 0)
         stats["aiCreditsLimit"] = 5000
         stats["storageUsedMB"] = storage_used_mb
         stats["storageLimitMB"] = 100
@@ -52,8 +54,8 @@ def get_global_stats(
     supabase: Client = Depends(get_supabase_client),
 ):
     try:
-        response = supabase.table("user_stats").select("wordsRephrased").execute()
-        total_words = sum(row.get("wordsRephrased", 0) for row in response.data)
+        response = supabase.table("user_stats").select("wordsrephrased").execute()
+        total_words = sum(row.get("wordsrephrased", 0) for row in response.data)
         return {"totalWordsRephrased": total_words}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch global stats: {str(e)}")
@@ -69,29 +71,29 @@ def update_user_stats(
         response = supabase.table("user_stats").select("*").eq("user_id", user_id).execute()
         if not response.data:
             current = {
-                "checksDone": 0,
-                "rephrasedCount": 0,
-                "wordsRephrased": 0,
-                "humanContent": "0%",
-                "aiContent": "0%"
+                "checksdone": 0,
+                "rephrasedcount": 0,
+                "wordsrephrased": 0,
+                "humancontent": "0%",
+                "aicontent": "0%"
             }
         else:
             current = response.data[0]
 
-        new_checks = current.get("checksDone", 0) + (input_data.checkIncrement or 0)
-        new_rephrased = current.get("rephrasedCount", 0) + (input_data.rephraseIncrement or 0)
-        new_words = current.get("wordsRephrased", 0) + (input_data.wordIncrement or 0)
+        new_checks = current.get("checksdone", 0) + (input_data.checkIncrement or 0)
+        new_rephrased = current.get("rephrasedcount", 0) + (input_data.rephraseIncrement or 0)
+        new_words = current.get("wordsrephrased", 0) + (input_data.wordIncrement or 0)
         
         update_data = {
-            "checksDone": new_checks,
-            "rephrasedCount": new_rephrased,
-            "wordsRephrased": new_words,
+            "checksdone": new_checks,
+            "rephrasedcount": new_rephrased,
+            "wordsrephrased": new_words,
         }
 
         if input_data.humanScore is not None:
-            update_data["humanContent"] = f"{int(input_data.humanScore)}%"
+            update_data["humancontent"] = f"{int(input_data.humanScore)}%"
         if input_data.aiScore is not None:
-            update_data["aiContent"] = f"{int(input_data.aiScore)}%"
+            update_data["aicontent"] = f"{int(input_data.aiScore)}%"
 
         supabase.table("user_stats").upsert({**update_data, "user_id": user_id}).execute()
         return {"status": "success", "stats": update_data}

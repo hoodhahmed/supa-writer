@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 
 class DocumentBase(BaseModel):
@@ -7,11 +7,16 @@ class DocumentBase(BaseModel):
 
 class DocumentCreate(DocumentBase):
     id: str
-    lastModified: int
+    lastModified: int = Field(alias="lastmodified")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 class DocumentResponse(DocumentBase):
     id: str
-    lastModified: int
+    lastModified: int = Field(alias="lastmodified")
+
+    model_config = ConfigDict(populate_by_name=True)
+
 
 class SentenceAnalysis(BaseModel):
     text: str
