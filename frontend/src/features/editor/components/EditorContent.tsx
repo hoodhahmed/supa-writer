@@ -7,6 +7,7 @@ interface EditorContentProps {
   documents: EditorDocument[];
   docScore: any | null;
   grammarlyScore: any | null;
+  fullGrammarlyResults: any[] | null;
   isScanning: boolean;
   onSelection: () => void;
   onInput: () => void;
@@ -20,6 +21,7 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       documents,
       docScore,
       grammarlyScore,
+      fullGrammarlyResults,
       isScanning,
       onSelection,
       onInput,
@@ -62,6 +64,35 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       });
     }, [grammarlyScore, ref]);
 
+    // Convert full Grammarly scan results (multi-paragraph) to sentences
+    const fullGrammarlySentences = React.useMemo(() => {
+      if (!fullGrammarlyResults || !ref || !('current' in ref) || !ref.current) return null;
+      
+      const editor = ref.current;
+      const textNodes: Text[] = [];
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+      let node;
+      while ((node = walker.nextNode())) {
+        textNodes.push(node as Text);
+      }
+      const fullText = textNodes.map(n => n.textContent || '').join('');
+
+      const allSentences: any[] = [];
+      fullGrammarlyResults.forEach(res => {
+        if (!res.alertRanges) return;
+        res.alertRanges.forEach((range: any) => {
+          const begin = (res.offset || 0) + range.begin;
+          const end = (res.offset || 0) + range.end;
+          allSentences.push({
+            text: fullText.substring(begin, end),
+            aiProbability: range.score,
+            isAI: range.score > 50
+          });
+        });
+      });
+      return allSentences;
+    }, [fullGrammarlyResults, ref]);
+
     return (
       <div className="relative w-full">
         <div
@@ -78,6 +109,9 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
         )}
         {grammarlySentences && (
           <ForensicOverlay sentences={grammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+        )}
+        {fullGrammarlySentences && (
+          <ForensicOverlay sentences={fullGrammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
       </div>
     );

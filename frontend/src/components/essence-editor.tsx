@@ -61,6 +61,7 @@ export function EssenceEditor() {
   const [isGrammarlyChecking, setIsGrammarlyChecking] = useState(false);
   const [docScore, setDocScore] = useState<any | null>(null);
   const [grammarlyScore, setGrammarlyScore] = useState<any | null>(null);
+  const [fullGrammarlyResults, setFullGrammarlyResults] = useState<any[] | null>(null);
   const [selectionOffset, setSelectionOffset] = useState<number>(0);
   const [isSaved, setIsSaved] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,6 +92,7 @@ export function EssenceEditor() {
   const handleInput = useCallback(() => {
     if (docScore) setDocScore(null);
     if (grammarlyScore) setGrammarlyScore(null);
+    if (fullGrammarlyResults) setFullGrammarlyResults(null);
     setIsSaved(false);
     if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -258,6 +260,7 @@ export function EssenceEditor() {
     setToolbarPos(null);
     setDocScore(null);
     setGrammarlyScore(null);
+    setFullGrammarlyResults(null);
     handleInput();
   }, [versions, setEditorSelection, setToolbarPos, handleInput]);
 
@@ -322,6 +325,85 @@ export function EssenceEditor() {
     }
   }, [editorSelection, toast, setToolbarPos, setEditorSelection]);
 
+  const handleGrammarlyFullScan = useCallback(async () => {
+    if (!editorRef.current) return;
+    
+    setIsGrammarlyChecking(true);
+    setFullGrammarlyResults(null);
+    setGrammarlyScore(null);
+    setDocScore(null);
+
+    try {
+      const editor = editorRef.current;
+      const paragraphs: { text: string; offset: number }[] = [];
+      
+      // Get all child elements of the editor
+      const children = Array.from(editor.childNodes);
+      let cumulativeOffset = 0;
+
+      // Extract text nodes to get a full text representation for offset calculation
+      const textNodes: Text[] = [];
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+      let node;
+      while ((node = walker.nextNode())) {
+        textNodes.push(node as Text);
+      }
+      const fullText = textNodes.map(n => n.textContent || '').join('');
+
+      // Iterate through block elements to identify paragraphs
+      const blockElements = editor.querySelectorAll('p, div, blockquote');
+      
+      blockElements.forEach((el) => {
+        const text = el.textContent?.trim() || '';
+        // Skip headings, titles (if identifiable), and very short text
+        const isHeading = /h[1-6]/i.test(el.tagName);
+        const isReference = text.toLowerCase().includes('reference') || text.toLowerCase().startsWith('[');
+        
+        if (text.length > 20 && !isHeading && !isReference) {
+          // Find this element's text start position in fullText
+          const idx = fullText.indexOf(text, cumulativeOffset);
+          if (idx !== -1) {
+            paragraphs.push({ text, offset: idx });
+            cumulativeOffset = idx + text.length;
+          }
+        }
+      });
+
+      if (paragraphs.length === 0) {
+        toast("No suitable paragraphs found for scanning.", "info");
+        setIsGrammarlyChecking(false);
+        return;
+      }
+
+      toast(`Scanning ${paragraphs.length} paragraphs...`, "info");
+
+      // Scan concurrently
+      const scanResults = await Promise.all(
+        paragraphs.map(async (p) => {
+          try {
+            const res = await api.getGrammarlyScore(p.text);
+            return { ...res, offset: p.offset };
+          } catch (e) {
+            console.error('Paragraph scan failed', e);
+            return null;
+          }
+        })
+      );
+
+      const validResults = scanResults.filter(Boolean);
+      setFullGrammarlyResults(validResults);
+      
+      const totalAI = validResults.filter(r => r.score > 50).length;
+      toast(`Scan complete. Found AI in ${totalAI}/${paragraphs.length} sections.`, totalAI > 0 ? "error" : "success");
+
+    } catch (error) {
+      console.error('Full scan failed:', error);
+      toast("Failed to perform full Grammarly scan.", "error");
+    } finally {
+      setIsGrammarlyChecking(false);
+    }
+  }, [toast]);
+
   if (docsLoading) {
     return (
       <div className="napkin-app h-screen w-screen flex flex-col">
@@ -340,7 +422,13 @@ export function EssenceEditor() {
   return (
     <div className="napkin-app h-screen overflow-hidden">
       {/* Top header */}
-      <NotebookHeader onCreate={createNewDoc} onScan={handleScan} docScore={docScore} saved={isSaved} />
+      <NotebookHeader 
+        onCreate={createNewDoc} 
+        onScan={handleScan} 
+        onGrammarlyFullScan={handleGrammarlyFullScan}
+        docScore={docScore} 
+        saved={isSaved} 
+      />
 
       {/* Body: sidebar + main */}
       <div className="napkin-body overflow-hidden">
@@ -364,6 +452,7 @@ export function EssenceEditor() {
               documents={documents}
               docScore={docScore}
               grammarlyScore={grammarlyScore}
+              fullGrammarlyResults={fullGrammarlyResults}
               isScanning={isScanning}
               onSelection={handleSelection}
               onInput={handleInput}

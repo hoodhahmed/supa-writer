@@ -1,4 +1,4 @@
-import { LogOut, Plus, Sparkles, LayoutGrid } from 'lucide-react';
+import { LogOut, Plus, Sparkles, LayoutGrid, Search } from 'lucide-react';
 import { useState } from 'react';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { Link, useLocation } from 'react-router-dom';
@@ -9,11 +9,12 @@ import { cn } from '@/lib/utils';
 interface NotebookHeaderProps {
   onCreate?: () => unknown;
   onScan?: () => void;
+  onGrammarlyFullScan?: () => void;
   docScore?: any;
   saved?: boolean;
 }
 
-export function NotebookHeader({ onCreate, onScan, docScore, saved }: NotebookHeaderProps) {
+export function NotebookHeader({ onCreate, onScan, onGrammarlyFullScan, docScore, saved }: NotebookHeaderProps) {
   const [openAuth, setOpenAuth] = useState(false);
   const { token, signout } = useAuth();
   const location = useLocation();
@@ -74,6 +75,15 @@ export function NotebookHeader({ onCreate, onScan, docScore, saved }: NotebookHe
                 Check AI
               </button>
             )}
+
+            <button 
+              onClick={onGrammarlyFullScan}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase hover:bg-emerald-100 transition-all hover:scale-105 active:scale-95"
+              title="Full Grammarly AI Check (Paragraphs)"
+            >
+              <Search size={10} strokeWidth={3} />
+              Grammarly Check
+            </button>
           </div>
         )}
 
