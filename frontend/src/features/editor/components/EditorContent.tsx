@@ -6,6 +6,7 @@ interface EditorContentProps {
   currentDocId: string | null;
   documents: EditorDocument[];
   docScore: any | null;
+  grammarlyScore: any | null;
   isScanning: boolean;
   onSelection: () => void;
   onInput: () => void;
@@ -18,6 +19,7 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       currentDocId,
       documents,
       docScore,
+      grammarlyScore,
       isScanning,
       onSelection,
       onInput,
@@ -34,6 +36,32 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       }
     }, [currentDocId, documents, ref]);
 
+    // Convert Grammarly alertRanges to sentences format for ForensicOverlay
+    const grammarlySentences = React.useMemo(() => {
+      if (!grammarlyScore?.alertRanges || !ref || !('current' in ref) || !ref.current) return null;
+      
+      const editor = ref.current;
+      const textNodes: Text[] = [];
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+      let node;
+      while ((node = walker.nextNode())) {
+        textNodes.push(node as Text);
+      }
+      const fullText = textNodes.map(n => n.textContent || '').join('');
+
+      return grammarlyScore.alertRanges.map((range: any) => {
+        // Adjust for selection offset if present in grammarlyScore
+        const begin = (grammarlyScore.offset || 0) + range.begin;
+        const end = (grammarlyScore.offset || 0) + range.end;
+        
+        return {
+          text: fullText.substring(begin, end),
+          aiProbability: range.score,
+          isAI: range.score > 50
+        };
+      });
+    }, [grammarlyScore, ref]);
+
     return (
       <div className="relative w-full">
         <div
@@ -47,6 +75,9 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
         />
         {docScore?.sentences && !isScanning && (
           <ForensicOverlay sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+        )}
+        {grammarlySentences && (
+          <ForensicOverlay sentences={grammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
       </div>
     );

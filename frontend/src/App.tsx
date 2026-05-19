@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useAuth } from '@/services/useAuth';
 import { AppProvider } from '@/context/AppContext';
+import { ToastProvider } from '@/hooks/useToast';
 
 // Lazy load components
 const EssenceEditor = lazy(() => import('@/components/essence-editor').then(m => ({ default: m.EssenceEditor })));
@@ -70,10 +71,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppProvider>
-        <TooltipProvider>
-          <AppRoutes />
-          <Toaster />
-        </TooltipProvider>
+        <ToastProvider>
+          <TooltipProvider>
+            <AppRoutes />
+            <Toaster />
+          </TooltipProvider>
+        </ToastProvider>
       </AppProvider>
     </BrowserRouter>
   );

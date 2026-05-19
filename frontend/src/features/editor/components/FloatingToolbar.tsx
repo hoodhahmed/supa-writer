@@ -1,17 +1,18 @@
 import React from 'react';
-import { Sparkles, Sliders, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic } from 'lucide-react';
+import { Sparkles, Sliders, AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, Search } from 'lucide-react';
 
 interface Props {
   x: number;
   y: number;
   onHumanize: () => void;
+  onGrammarlyCheck: () => void;
   onTone: (tone: string) => void;
   selectedTone?: string;
   onClose?: () => void;
   disabled?: boolean;
 }
 
-export function FloatingToolbar({ x, y, onHumanize, onTone, selectedTone = 'Standard', onClose, disabled }: Props) {
+export function FloatingToolbar({ x, y, onHumanize, onGrammarlyCheck, onTone, selectedTone = 'Standard', onClose, disabled }: Props) {
   const [showToneMenu, setShowToneMenu] = React.useState(false);
   
   const tones = [
@@ -138,24 +139,45 @@ export function FloatingToolbar({ x, y, onHumanize, onTone, selectedTone = 'Stan
       <div style={divider} />
 
       {/* Humanize */}
-      <button
-        onClick={onHumanize}
-        disabled={disabled}
-        title={`Humanize selected text as ${selectedTone}`}
-        style={{
-          ...btnBase,
-          background: disabled ? 'rgba(51, 195, 255, 0.5)' : '#33C3FF',
-          color: '#fff',
-          opacity: disabled ? 0.7 : 1,
-          padding: '6px 14px',
-          boxShadow: '0 2px 4px rgba(51, 195, 255, 0.2)',
-        }}
-        onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = '#0db3f0'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-        onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#33C3FF'; e.currentTarget.style.transform = 'translateY(0)'; } }}
-      >
-        <Sparkles size={14} strokeWidth={2.5} />
-        {selectedTone === 'Standard' ? 'Humanize' : `Write as ${selectedTone}`}
-      </button>
+      <div style={{ display: 'flex', gap: 4 }}>
+        <button
+          onClick={onHumanize}
+          disabled={disabled}
+          title={`Humanize selected text as ${selectedTone}`}
+          style={{
+            ...btnBase,
+            background: disabled ? 'rgba(51, 195, 255, 0.5)' : '#33C3FF',
+            color: '#fff',
+            opacity: disabled ? 0.7 : 1,
+            padding: '6px 14px',
+            boxShadow: '0 2px 4px rgba(51, 195, 255, 0.2)',
+          }}
+          onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = '#0db3f0'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+          onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#33C3FF'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+        >
+          <Sparkles size={14} strokeWidth={2.5} />
+          {selectedTone === 'Standard' ? 'Humanize' : `Write as ${selectedTone}`}
+        </button>
+
+        <button
+          onClick={onGrammarlyCheck}
+          disabled={disabled}
+          title="Grammarly AI Check"
+          style={{
+            ...btnBase,
+            background: disabled ? 'rgba(16, 185, 129, 0.5)' : '#10B981',
+            color: '#fff',
+            opacity: disabled ? 0.7 : 1,
+            padding: '6px 14px',
+            boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)',
+          }}
+          onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = '#059669'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+          onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#10B981'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+        >
+          <Search size={14} strokeWidth={2.5} />
+          Grammarly AI
+        </button>
+      </div>
 
       {/* Tone */}
       <div style={{ position: 'relative' }}>
