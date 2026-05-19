@@ -1,11 +1,22 @@
 import httpx
 import re
 from fastapi import APIRouter, HTTPException
-from app.schemas.document import AIScoreInput, AIScoreOutput, HumanizeInput, HumanizeOutput
+from starlette.concurrency import run_in_threadpool
+from app.schemas.document import AIScoreInput, AIScoreOutput, HumanizeInput, HumanizeOutput, GrammarlyScoreOutput
 from app.core.config import settings
+from app.api.grammarly_client import grammarly_client
 
 router = APIRouter()
 
+@router.post("/grammarly-score", response_model=GrammarlyScoreOutput)
+async def get_grammarly_score(input_data: AIScoreInput):
+    try:
+        # Run the sync grammarly client in a threadpool to avoid blocking
+        result = await run_in_threadpool(grammarly_client.check, input_data.documentText)
+        return result
+    except Exception as e:
+        print(f"DEBUG: Grammarly AI Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 def build_fallback_ai_score(document_text: str, feedback: str) -> AIScoreOutput:
     sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", document_text.strip()) if part.strip()]

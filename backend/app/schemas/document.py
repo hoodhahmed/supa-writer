@@ -39,3 +39,15 @@ class HumanizeInput(BaseModel):
 class HumanizeOutput(BaseModel):
     humanizedText: str
     score: Optional[float] = None
+
+class GrammarlyAlertRange(BaseModel):
+    begin: int
+    end: int
+    score: int
+
+class GrammarlyScoreOutput(BaseModel):
+    category: str
+    group: str
+    categoryHuman: str
+    score: int
+    alertRanges: List[GrammarlyAlertRange]

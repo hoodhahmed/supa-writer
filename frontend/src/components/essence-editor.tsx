@@ -3,6 +3,7 @@ import { ParticleEffect } from '@/components/particle-effect';
 
 import '@/assets/editor.css';
 import { api } from '@/services/api';
+import { useToast } from '@/hooks/useToast';
 import { useDocuments } from '@/features/editor/hooks/useDocuments';
 import { useEditor } from '@/features/editor/hooks/useEditor';
 import { NotebookHeader } from '@/features/editor/components/NotebookHeader';
@@ -38,6 +39,7 @@ function textToHtmlFragment(text: string) {
 
 export function EssenceEditor() {
   const SuggestionPanelAny = SuggestionPanel as unknown as ComponentType<any>;
+  const { toast } = useToast();
   
   // 1. All Hooks & State at the top
   const { documents, currentDocId, saveCurrentDoc: persistDocument, createNewDoc, deleteDoc, setCurrentDocId, loading: docsLoading } = useDocuments();
@@ -56,7 +58,10 @@ export function EssenceEditor() {
   } = useEditor();
 
   const [isScanning, setIsScanning] = useState(false);
+  const [isGrammarlyChecking, setIsGrammarlyChecking] = useState(false);
   const [docScore, setDocScore] = useState<any | null>(null);
+  const [grammarlyScore, setGrammarlyScore] = useState<any | null>(null);
+  const [selectionOffset, setSelectionOffset] = useState<number>(0);
   const [isSaved, setIsSaved] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [versions, setVersions] = useState<any[]>([]);
@@ -85,6 +90,7 @@ export function EssenceEditor() {
 
   const handleInput = useCallback(() => {
     if (docScore) setDocScore(null);
+    if (grammarlyScore) setGrammarlyScore(null);
     setIsSaved(false);
     if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -148,9 +154,18 @@ export function EssenceEditor() {
     if (sel && sel.toString().trim().length > 0) {
       // Check if selection is within the editor
       const isInsideEditor = editorRef.current?.contains(sel.anchorNode);
-      if (isInsideEditor) {
+      if (isInsideEditor && editorRef.current) {
         const range = sel.getRangeAt(0);
         const rect = range.getBoundingClientRect();
+        
+        // Calculate absolute character offset within the editor
+        let offset = 0;
+        const preRange = document.createRange();
+        preRange.selectNodeContents(editorRef.current);
+        preRange.setEnd(range.startContainer, range.startOffset);
+        offset = preRange.toString().length;
+
+        setSelectionOffset(offset);
         setToolbarPos({ x: rect.left + rect.width / 2, y: rect.top });
         setEditorSelection(sel.toString());
       }
@@ -242,6 +257,7 @@ export function EssenceEditor() {
     setEditorSelection('');
     setToolbarPos(null);
     setDocScore(null);
+    setGrammarlyScore(null);
     handleInput();
   }, [versions, setEditorSelection, setToolbarPos, handleInput]);
 
@@ -282,6 +298,30 @@ export function EssenceEditor() {
     setVersionIndex((i: number) => Math.min(versions.length - 1, i + 1));
   }, [versions.length]);
 
+  const handleGrammarlyCheck = useCallback(async () => {
+    const textToCheck = (editorSelection || '').trim();
+    if (!textToCheck) return;
+
+    setIsGrammarlyChecking(true);
+    setGrammarlyScore(null);
+    const offsetAtTrigger = selectionOffset; // Capture current offset
+    try {
+      const result = await api.getGrammarlyScore(textToCheck);
+      setGrammarlyScore({ ...result, offset: offsetAtTrigger });
+      toast(
+        `AI Probability Score: ${result.score}%`,
+        result.score > 50 ? "error" : "success"
+      );
+    } catch (error) {
+      console.error('Failed Grammarly AI check:', error);
+      toast("Failed to perform Grammarly AI check.", "error");
+    } finally {
+      setIsGrammarlyChecking(false);
+      setToolbarPos(null);
+      setEditorSelection('');
+    }
+  }, [editorSelection, toast, setToolbarPos, setEditorSelection]);
+
   if (docsLoading) {
     return (
       <div className="napkin-app h-screen w-screen flex flex-col">
@@ -317,12 +357,13 @@ export function EssenceEditor() {
 
         {/* Main content area */}
         <main className="napkin-main">
-          <NotebookCanvas isRewriting={isHumanizing} isScanning={isScanning}>
+          <NotebookCanvas isRewriting={isHumanizing} isScanning={isScanning || isGrammarlyChecking}>
             <EditorContent
               ref={editorRef}
               currentDocId={currentDocId}
               documents={documents}
               docScore={docScore}
+              grammarlyScore={grammarlyScore}
               isScanning={isScanning}
               onSelection={handleSelection}
               onInput={handleInput}
@@ -336,10 +377,11 @@ export function EssenceEditor() {
               x={toolbarPos.x}
               y={toolbarPos.y}
               onHumanize={() => { void handleHumanize(); }}
+              onGrammarlyCheck={() => { void handleGrammarlyCheck(); }}
               onTone={(tone: string) => setSelectedTone(tone)}
               selectedTone={selectedTone}
               onClose={() => { setEditorSelection(''); setToolbarPos(null); }}
-              disabled={isHumanizing}
+              disabled={isHumanizing || isGrammarlyChecking}
             />
           ) : null}
         </main>
