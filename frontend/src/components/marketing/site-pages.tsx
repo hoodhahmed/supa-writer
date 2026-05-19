@@ -123,7 +123,7 @@ export const SiteShell: FC<PropsWithChildren<{}>> = ({ children }) => {
                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                  </svg>
               </div>
-              <span className="font-black text-2xl tracking-tighter text-[#484848]">Aiham Fuck</span>
+              <span className="font-black text-2xl tracking-tighter text-[#484848]">SupaWrite</span>
             </Link>
           </div>
 

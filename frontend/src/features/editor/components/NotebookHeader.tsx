@@ -37,7 +37,7 @@ export function NotebookHeader({ onCreate, onScan, onGrammarlyFullScan, docScore
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
             </svg>
           </div>
-          <span className="font-black text-xl tracking-tighter text-[#1A1A1A]">Aiham GRB</span>
+          <span className="font-black text-xl tracking-tighter text-[#1A1A1A]">SupaWrite</span>
         </Link>
       </div>
 
