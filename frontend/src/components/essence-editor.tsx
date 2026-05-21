@@ -154,11 +154,20 @@ export function EssenceEditor() {
         return;
       }
 
-      const CONCURRENCY_LIMIT = 30;
+      toast(`QuillBot: Scanning ${paragraphs.length} paragraphs...`, "info");
+
+      const CONCURRENCY_LIMIT = 15; // Adjusted to be safer while still fast
       const scanResults: any[] = [];
       
       for (let i = 0; i < paragraphs.length; i += CONCURRENCY_LIMIT) {
         const chunk = paragraphs.slice(i, i + CONCURRENCY_LIMIT);
+        
+        // Show progress for larger documents
+        if (paragraphs.length > CONCURRENCY_LIMIT) {
+          const currentCount = Math.min(i + CONCURRENCY_LIMIT, paragraphs.length);
+          toast(`QuillBot Progress: ${currentCount}/${paragraphs.length} paragraphs...`, "info");
+        }
+
         const chunkResults = await Promise.all(
           chunk.map(async (p) => {
             if (aiCache.current.has(`quillbot:${p.text}`)) {
@@ -180,6 +189,9 @@ export function EssenceEditor() {
 
       const validResults = scanResults.filter(Boolean);
       setFullQuillBotResults(validResults);
+      
+      const totalAI = validResults.filter(r => (r.data?.value?.aiScore || 0) > 0.5).length;
+      toast(`QuillBot scan complete. Found AI in ${totalAI}/${paragraphs.length} sections.`, totalAI > 0 ? "error" : "success");
 
     } catch (error) {
       console.error('Full QuillBot scan failed:', error);
@@ -227,11 +239,19 @@ export function EssenceEditor() {
         return;
       }
 
-      const CONCURRENCY_LIMIT = 30;
+      toast(`Grammarly: Scanning ${paragraphs.length} paragraphs...`, "info");
+
+      const CONCURRENCY_LIMIT = 15;
       const scanResults: any[] = [];
       
       for (let i = 0; i < paragraphs.length; i += CONCURRENCY_LIMIT) {
         const chunk = paragraphs.slice(i, i + CONCURRENCY_LIMIT);
+        
+        if (paragraphs.length > CONCURRENCY_LIMIT) {
+          const currentCount = Math.min(i + CONCURRENCY_LIMIT, paragraphs.length);
+          toast(`Grammarly Progress: ${currentCount}/${paragraphs.length} paragraphs...`, "info");
+        }
+
         const chunkResults = await Promise.all(
           chunk.map(async (p) => {
             if (aiCache.current.has(`grammarly:${p.text}`)) {
@@ -253,9 +273,13 @@ export function EssenceEditor() {
 
       const validResults = scanResults.filter(Boolean);
       setFullGrammarlyResults(validResults);
+      
+      const totalAI = validResults.filter(r => r.score > 50).length;
+      toast(`Grammarly scan complete. Found AI in ${totalAI}/${paragraphs.length} sections.`, totalAI > 0 ? "error" : "success");
 
     } catch (error) {
       console.error('Full scan failed:', error);
+      toast("Failed to perform full Grammarly scan.", "error");
     } finally {
       setIsGrammarlyChecking(false);
     }
