@@ -43,11 +43,11 @@ def create_session() -> Session:
 
         page.goto(
             "https://www.grammarly.com/ai-detector",
-            wait_until="domcontentloaded"
+            wait_until="networkidle"
         )
 
-        # Wait for cookies to be set
-        page.wait_for_timeout(2000)
+        # Wait a small bit more just in case for cookies
+        page.wait_for_timeout(1000)
         cookies = {c["name"]: c["value"] for c in context.cookies()}
 
         csrf = None
@@ -137,6 +137,8 @@ class SessionManager:
 class APIClient:
     def __init__(self, manager: SessionManager):
         self.manager = manager
+        self._session = requests.Session()
+        self._session_lock = threading.Lock()
 
     def headers(self, s: Session):
         return {
@@ -158,22 +160,22 @@ class APIClient:
         for i in range(retries):
             s = self.manager.get()
             try:
-                with requests.Session() as session:
-                    r = session.post(
-                        url,
-                        headers=self.headers(s),
-                        cookies=s.cookies,
-                        data=text.encode("utf-8"),
-                        impersonate="chrome120",
-                        timeout=30
-                    )
+                # Optimized: removed _session_lock to allow concurrent requests
+                r = self._session.post(
+                    url,
+                    headers=self.headers(s),
+                    cookies=s.cookies,
+                    data=text.encode("utf-8"),
+                    impersonate="chrome120",
+                    timeout=30
+                )
 
-                    if r.status_code == 200:
-                        return r.json()
-                    
-                    print(f"DEBUG: Grammarly API error (Attempt {i+1}): {r.status_code} - {r.text}")
-                    if r.status_code in [401, 403]:
-                        self.manager.refresh(s)
+                if r.status_code == 200:
+                    return r.json()
+                
+                print(f"DEBUG: Grammarly API error (Attempt {i+1}): {r.status_code} - {r.text}")
+                if r.status_code in [401, 403]:
+                    self.manager.refresh(s)
             except Exception as e:
                 print(f"DEBUG: Exception during Grammarly check (Attempt {i+1}): {e}")
                 last_error = e

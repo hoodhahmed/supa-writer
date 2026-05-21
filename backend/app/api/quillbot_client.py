@@ -48,11 +48,11 @@ def create_session() -> Session:
 
         page.goto(
             "https://quillbot.com/ai-content-detector",
-            wait_until="domcontentloaded"
+            wait_until="networkidle"
         )
 
-        # Quillbot needs a bit longer to settle cookies
-        page.wait_for_timeout(5000)
+        # Optimize: slightly reduced timeout
+        page.wait_for_timeout(3000)
 
         cookies = {c["name"]: c["value"] for c in context.cookies()}
 
@@ -128,6 +128,8 @@ class SessionManager:
 class QuillBotClient:
     def __init__(self, manager: SessionManager):
         self.manager = manager
+        self._session = requests.Session()
+        self._session_lock = threading.Lock()
 
     def check(self, text: str, explain: bool = True, retries: int = 5):
         url = "https://quillbot.com/api/ai-detector/score"
@@ -141,25 +143,25 @@ class QuillBotClient:
         for i in range(retries):
             s = self.manager.get()
             try:
-                with requests.Session() as session:
-                    response = session.post(
-                        url,
-                        headers=s.headers,
-                        cookies=s.cookies,
-                        json=payload,
-                        impersonate="chrome120",
-                        timeout=30
-                    )
+                # Optimized: removed _session_lock to allow concurrent requests
+                response = self._session.post(
+                    url,
+                    headers=s.headers,
+                    cookies=s.cookies,
+                    json=payload,
+                    impersonate="chrome120",
+                    timeout=30
+                )
 
-                    if response.status_code == 200:
-                        return response.json()
+                if response.status_code == 200:
+                    return response.json()
 
-                    print(f"DEBUG: QuillBot API error (Attempt {i+1}): {response.status_code} - {response.text}")
-                    if response.status_code in [401, 403, 429]:
-                        self.manager.refresh(s)
-                        continue
-                    
+                print(f"DEBUG: QuillBot API error (Attempt {i+1}): {response.status_code} - {response.text}")
+                if response.status_code in [401, 403, 429]:
                     self.manager.refresh(s)
+                    continue
+                
+                self.manager.refresh(s)
             except Exception as e:
                 print(f"DEBUG: Exception during QuillBot check (Attempt {i+1}): {e}")
                 last_error = e

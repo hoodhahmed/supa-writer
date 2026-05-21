@@ -60,6 +60,7 @@ export function EssenceEditor() {
   const [isScanning, setIsScanning] = useState(false);
   const [isGrammarlyChecking, setIsGrammarlyChecking] = useState(false);
   const [isQuillBotChecking, setIsQuillBotChecking] = useState(false);
+  const aiCache = useRef<Map<string, any>>(new Map());
   const [docScore, setDocScore] = useState<any | null>(null);
   const [grammarlyScore, setGrammarlyScore] = useState<any | null>(null);
   const [quillbotScore, setQuillbotScore] = useState<any | null>(null);
@@ -154,17 +155,28 @@ export function EssenceEditor() {
 
       toast(`Scanning ${paragraphs.length} paragraphs with QuillBot...`, "info");
 
-      const scanResults = await Promise.all(
-        paragraphs.map(async (p) => {
-          try {
-            const res = await api.getQuillBotScore(p.text);
-            return { ...res, offset: p.offset };
-          } catch (e) {
-            console.error('QuillBot paragraph scan failed', e);
-            return null;
-          }
-        })
-      );
+      const CONCURRENCY_LIMIT = 30;
+      const scanResults: any[] = [];
+      
+      for (let i = 0; i < paragraphs.length; i += CONCURRENCY_LIMIT) {
+        const chunk = paragraphs.slice(i, i + CONCURRENCY_LIMIT);
+        const chunkResults = await Promise.all(
+          chunk.map(async (p) => {
+            if (aiCache.current.has(`quillbot:${p.text}`)) {
+              return { ...aiCache.current.get(`quillbot:${p.text}`), offset: p.offset };
+            }
+            try {
+              const res = await api.getQuillBotScore(p.text);
+              aiCache.current.set(`quillbot:${p.text}`, res);
+              return { ...res, offset: p.offset };
+            } catch (e) {
+              console.error('QuillBot paragraph scan failed', e);
+              return null;
+            }
+          })
+        );
+        scanResults.push(...chunkResults);
+      }
 
       const validResults = scanResults.filter(Boolean);
       setFullQuillBotResults(validResults);
@@ -458,18 +470,28 @@ export function EssenceEditor() {
 
       toast(`Scanning ${paragraphs.length} paragraphs...`, "info");
 
-      // Scan concurrently
-      const scanResults = await Promise.all(
-        paragraphs.map(async (p) => {
-          try {
-            const res = await api.getGrammarlyScore(p.text);
-            return { ...res, offset: p.offset };
-          } catch (e) {
-            console.error('Paragraph scan failed', e);
-            return null;
-          }
-        })
-      );
+      const CONCURRENCY_LIMIT = 30;
+      const scanResults: any[] = [];
+      
+      for (let i = 0; i < paragraphs.length; i += CONCURRENCY_LIMIT) {
+        const chunk = paragraphs.slice(i, i + CONCURRENCY_LIMIT);
+        const chunkResults = await Promise.all(
+          chunk.map(async (p) => {
+            if (aiCache.current.has(`grammarly:${p.text}`)) {
+              return { ...aiCache.current.get(`grammarly:${p.text}`), offset: p.offset };
+            }
+            try {
+              const res = await api.getGrammarlyScore(p.text);
+              aiCache.current.set(`grammarly:${p.text}`, res);
+              return { ...res, offset: p.offset };
+            } catch (e) {
+              console.error('Paragraph scan failed', e);
+              return null;
+            }
+          })
+        );
+        scanResults.push(...chunkResults);
+      }
 
       const validResults = scanResults.filter(Boolean);
       setFullGrammarlyResults(validResults);
