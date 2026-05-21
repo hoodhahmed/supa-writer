@@ -36,17 +36,31 @@ function scoreColor(score: number | null) {
   return '#F59E0B';
 }
 
-function getTopTone(tone?: Version['tone']) {
-  if (!tone) return null;
-  const entries = Object.entries(tone);
-  const top = entries.reduce((a, b) => a[1] > b[1] ? a : b);
-  return { label: top[0].toUpperCase(), score: Math.round(top[1] * 100) };
+function getAllTones(tone?: Version['tone']) {
+  if (!tone) return [];
+  return Object.entries(tone)
+    .filter(([_, val]) => val > 0.01) // Only show tones with at least 1%
+    .sort((a, b) => b[1] - a[1])
+    .map(([key, val]) => ({
+      key,
+      label: key.toUpperCase(),
+      score: Math.round(val * 100)
+    }));
 }
+
+const TONE_STYLE: Record<string, { bg: string; border: string; color: string }> = {
+  friendly: { bg: '#ECFDF5', border: '#D1FAE5', color: '#059669' },
+  formal: { bg: '#EFF6FF', border: '#DBEAFE', color: '#2563EB' },
+  clear: { bg: '#F5F3FF', border: '#EDE9FE', color: '#7C3AED' },
+  simple: { bg: '#FEFCE8', border: '#FEF9C3', color: '#CA8A04' },
+  concise: { bg: '#FFF7ED', border: '#FFEDD5', color: '#EA580C' },
+  default: { bg: '#F9FAFB', border: '#F3F4F6', color: '#6B7280' },
+};
 
 export function SuggestionPanel({ versions, index, onApply, onReject, onRegenerate, onPrev, onNext }: SuggestionPanelProps) {
   const current = versions[index];
   const aiScore = computeAIScore(current?.score ?? null);
-  const topTone = getTopTone(current?.tone);
+  const allTones = getAllTones(current?.tone);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
 
@@ -179,22 +193,19 @@ export function SuggestionPanel({ versions, index, onApply, onReject, onRegenera
               </span>
             )}
             
-            {topTone && (
-              <span style={{
-                fontSize: 10, fontWeight: 600, padding: '2px 8px',
-                borderRadius: 20, background: '#EEF2FF',
-                border: '1px solid #e0e7ff', color: '#6366F1',
-                letterSpacing: '0.02em',
-              }} title={`Tone Confidence: ${topTone.score}%`}>
-                {topTone.label}
-              </span>
-            )}
-            <span style={{
-              fontSize: 10, fontWeight: 500, padding: '2px 8px',
-              borderRadius: 20, background: '#FFF8ED',
-              border: '1px solid #fde68a', color: '#D97706',
-              letterSpacing: '0.02em',
-            }}>ACADEMIC</span>
+            {allTones.map((t) => {
+              const style = TONE_STYLE[t.key] || TONE_STYLE.default;
+              return (
+                <span key={t.key} style={{
+                  fontSize: 10, fontWeight: 600, padding: '2px 8px',
+                  borderRadius: 20, background: style.bg,
+                  border: `1px solid ${style.border}`, color: style.color,
+                  letterSpacing: '0.02em',
+                }}>
+                  {t.label} {t.score}%
+                </span>
+              );
+            })}
 
             {/* Close */}
             <button
