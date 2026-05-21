@@ -537,17 +537,10 @@
 
 /* AI Forensic Highlights */
 .ai-highlight-box {
-  background-color: rgba(255, 87, 34, 0.12);
-  border-bottom: 2px solid rgba(255, 87, 34, 0.3);
   border-radius: 2px;
-  /* Removed transition to avoid sliding animation when positions update */
-  cursor: help;
+  cursor: pointer;
   z-index: 1;
-}
-
-.ai-highlight-box:hover {
-  background-color: rgba(255, 87, 34, 0.2);
-  border-bottom-color: rgba(255, 87, 34, 0.5);
+  /* Colors handled dynamically in ForensicOverlay component */
 }
 
 .editor-canvas > *:first-child {

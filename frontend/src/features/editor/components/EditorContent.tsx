@@ -138,19 +138,19 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
           onPaste={onPaste}
         />
         {docScore?.sentences && !isScanning && (
-          <ForensicOverlay sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="yellow" sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
         {quillbotSentences && (
-          <ForensicOverlay sentences={quillbotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="blue" sentences={quillbotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
         {grammarlySentences && (
-          <ForensicOverlay sentences={grammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="orange" sentences={grammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
         {fullGrammarlySentences && (
-          <ForensicOverlay sentences={fullGrammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="orange" sentences={fullGrammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
         {fullQuillBotSentences && (
-          <ForensicOverlay sentences={fullQuillBotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="blue" sentences={fullQuillBotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
       </div>
     );
