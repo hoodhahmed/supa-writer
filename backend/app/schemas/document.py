@@ -36,9 +36,35 @@ class HumanizeInput(BaseModel):
     text: str
     tone: Optional[str] = "Standard"
 
+class QuillBotToneScores(BaseModel):
+    friendly: float
+    formal: float
+    clear: float
+    simple: float
+    concise: float
+
+class QuillBotToneSentence(BaseModel):
+    id: str
+    modelID: str
+    scores: QuillBotToneScores
+    text: str
+
+class QuillBotToneData(BaseModel):
+    toneScoresForSentences: List[QuillBotToneSentence]
+    averageScore: QuillBotToneScores
+    timedOut: bool
+
+class QuillBotToneOutput(BaseModel):
+    message: str
+    traceID: str
+    code: str
+    data: QuillBotToneData
+    status: int
+
 class HumanizeOutput(BaseModel):
     humanizedText: str
     score: Optional[float] = None
+    tone: Optional[QuillBotToneScores] = None
 
 class GrammarlyAlertRange(BaseModel):
     begin: int

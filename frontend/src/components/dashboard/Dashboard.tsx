@@ -26,10 +26,12 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="w-full">
-      <NotebookHeader onCreate={() => { createNewDoc(); navigate('/app'); }} />
+    <div className="w-full flex flex-col items-center">
+      <div className="w-full max-w-6xl">
+        <NotebookHeader onCreate={() => { createNewDoc(); navigate('/app'); }} />
+      </div>
       
-      <div className="max-w-6xl mx-auto py-12 px-8">
+      <div className="w-full max-w-6xl py-12 px-8">
         {/* Minimal Header */}
         <div className="mb-10 text-center">
            <h1 className="text-[48px] font-black tracking-tighter leading-tight text-[#484848] font-creative">Workspace</h1>

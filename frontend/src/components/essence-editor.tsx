@@ -101,6 +101,7 @@ export function EssenceEditor() {
   const [quillbotScore, setQuillbotScore] = useState<any | null>(null);
   const [fullGrammarlyResults, setFullGrammarlyResults] = useState<any[] | null>(null);
   const [fullQuillBotResults, setFullQuillBotResults] = useState<any[] | null>(null);
+  const [fullToneResults, setFullToneResults] = useState<any[] | null>(null);
   const [selectionOffset, setSelectionOffset] = useState<number>(0);
   const [isSaved, setIsSaved] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -170,13 +171,13 @@ export function EssenceEditor() {
         const chunkResults = await Promise.all(
           chunk.map(async (p) => {
             if (aiCache.current.has(`quillbot:${p.text}`)) {
-              return { ...aiCache.current.get(`quillbot:${p.text}`), offset: p.offset };
+              return { ...aiCache.current.get(`quillbot:${p.text}`), offset: p.offset, text: p.text };
             }
             try {
               const res = await api.getQuillBotScore(p.text);
               aiCache.current.set(`quillbot:${p.text}`, res);
               saveCache();
-              return { ...res, offset: p.offset };
+              return { ...res, offset: p.offset, text: p.text };
             } catch (e) {
               console.error('QuillBot paragraph scan failed', e);
               return null;
@@ -258,13 +259,13 @@ export function EssenceEditor() {
         const chunkResults = await Promise.all(
           chunk.map(async (p) => {
             if (aiCache.current.has(`grammarly:${p.text}`)) {
-              return { ...aiCache.current.get(`grammarly:${p.text}`), offset: p.offset };
+              return { ...aiCache.current.get(`grammarly:${p.text}`), offset: p.offset, text: p.text };
             }
             try {
               const res = await api.getGrammarlyScore(p.text);
               aiCache.current.set(`grammarly:${p.text}`, res);
               saveCache();
-              return { ...res, offset: p.offset };
+              return { ...res, offset: p.offset, text: p.text };
             } catch (e) {
               console.error('Paragraph scan failed', e);
               return null;
@@ -457,9 +458,10 @@ export function EssenceEditor() {
       const result = await api.humanizeText(selectedText, selectedTone);
       const humanizedText = result?.humanizedText?.trim() || selectedText;
       const wh_score = result?.score ?? null;
+      const tone_scores = result?.tone ?? null;
 
       setVersions((prev: any[]) => {
-        const next = [{ text: humanizedText, score: wh_score }, ...prev];
+        const next = [{ text: humanizedText, score: wh_score, tone: tone_scores }, ...prev];
         return next.slice(0, 8);
       });
       setVersionIndex(0);
@@ -470,6 +472,73 @@ export function EssenceEditor() {
       setIsHumanizing(false);
     }
   }, [editorSelection, isHumanizing, selectedTone]);
+
+  const handleToneCheck = useCallback(async () => {
+    const textToCheck = (editorSelection || '').trim();
+    if (!textToCheck) return;
+
+    setIsScanning(true);
+    try {
+      const result = await api.getToneAnalysis(textToCheck);
+      const tone = result.data?.averageScore;
+      if (tone) {
+        const top = Object.entries(tone).reduce((a: any, b: any) => a[1] > b[1] ? a : b);
+        toast(`Tone Detected: ${top[0].toUpperCase()} (${Math.round(top[1] * 100)}%)`, "info");
+      }
+    } catch (error) {
+      console.error('Tone check failed', error);
+      toast("Failed to analyze tone.", "error");
+    } finally {
+      setIsScanning(false);
+      setToolbarPos(null);
+      setEditorSelection('');
+    }
+  }, [editorSelection, toast]);
+
+  const handleToneFullScan = useCallback(async () => {
+    if (!editorRef.current) return;
+    setIsScanning(true);
+    try {
+      const editor = editorRef.current;
+      const paragraphs: { text: string; offset: number }[] = [];
+      let cumulativeOffset = 0;
+      const textNodes: Text[] = [];
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+      let node;
+      while ((node = walker.nextNode())) { textNodes.push(node as Text); }
+      const fullText = textNodes.map(n => n.textContent || '').join('');
+
+      const blockElements = editor.querySelectorAll('p, div, blockquote');
+      blockElements.forEach((el) => {
+        const text = el.textContent?.trim() || '';
+        if (text.length > 20 && !/h[1-6]/i.test(el.tagName)) {
+          const idx = fullText.indexOf(text, cumulativeOffset);
+          if (idx !== -1) {
+            paragraphs.push({ text, offset: idx });
+            cumulativeOffset = idx + text.length;
+          }
+        }
+      });
+
+      if (paragraphs.length === 0) return;
+      toast(`Analyzing tone for ${paragraphs.length} paragraphs...`, "info");
+
+      const results = await Promise.all(
+        paragraphs.map(async (p) => {
+          try {
+            const res = await api.getToneAnalysis(p.text);
+            return { tone: res.data?.averageScore, offset: p.offset, text: p.text };
+          } catch { return null; }
+        })
+      );
+      setFullToneResults(results.filter(Boolean));
+      toast("Tone analysis complete.", "success");
+    } catch (error) {
+      console.error('Tone scan failed', error);
+    } finally {
+      setIsScanning(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
     if (versions.length === 0 && showSuggestionPanel) {
@@ -545,7 +614,9 @@ export function EssenceEditor() {
       const result = await api.humanizeText(base.text, selectedTone);
       const humanizedText = result?.humanizedText?.trim() || base.text;
       const wh_score = result?.score ?? null;
-      setVersions((prev: any[]) => [{ text: humanizedText, score: wh_score }, ...prev].slice(0, 8));
+      const tone_scores = result?.tone ?? null;
+
+      setVersions((prev: any[]) => [{ text: humanizedText, score: wh_score, tone: tone_scores }, ...prev].slice(0, 8));
       setVersionIndex(0);
     } catch (e) {
       console.error('Regenerate failed', e);
@@ -584,6 +655,7 @@ export function EssenceEditor() {
         onScan={handleScan} 
         onQuillBotCheck={handleQuillBotFullScan}
         onGrammarlyFullScan={handleGrammarlyFullScan}
+        onToneScan={handleToneFullScan}
         onResetCache={handleResetCache}
         docScore={docScore} 
         saved={isSaved} 
@@ -611,6 +683,7 @@ export function EssenceEditor() {
               quillbotScore={quillbotScore}
               fullGrammarlyResults={fullGrammarlyResults}
               fullQuillBotResults={fullQuillBotResults}
+              fullToneResults={fullToneResults}
               isScanning={isScanning}
               onSelection={handleSelection}
               onInput={handleInput}
@@ -625,6 +698,7 @@ export function EssenceEditor() {
               onHumanize={() => { void handleHumanize(); }}
               onGrammarlyCheck={() => { void handleGrammarlyCheck(); }}
               onQuillBotCheck={() => { void handleQuillBotCheck(); }}
+              onToneCheck={() => { void handleToneCheck(); }}
               onTone={(tone: string) => setSelectedTone(tone)}
               selectedTone={selectedTone}
               onClose={() => { setEditorSelection(''); setToolbarPos(null); }}

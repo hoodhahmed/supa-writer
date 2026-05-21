@@ -1,4 +1,4 @@
-import { LogOut, Plus, Sparkles, LayoutGrid, Search, RotateCcw } from 'lucide-react';
+import { LogOut, Plus, Sparkles, LayoutGrid, Search, RotateCcw, Sliders } from 'lucide-react';
 import { useState } from 'react';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { Link, useLocation } from 'react-router-dom';
@@ -11,12 +11,13 @@ interface NotebookHeaderProps {
   onScan?: () => void;
   onQuillBotCheck?: () => void;
   onGrammarlyFullScan?: () => void;
+  onToneScan?: () => void;
   onResetCache?: () => void;
   docScore?: any;
   saved?: boolean;
 }
 
-export function NotebookHeader({ onCreate, onScan, onQuillBotCheck, onGrammarlyFullScan, onResetCache, docScore, saved }: NotebookHeaderProps) {
+export function NotebookHeader({ onCreate, onScan, onQuillBotCheck, onGrammarlyFullScan, onToneScan, onResetCache, docScore, saved }: NotebookHeaderProps) {
   const [openAuth, setOpenAuth] = useState(false);
   const { token, signout } = useAuth();
   const location = useLocation();
@@ -94,6 +95,15 @@ export function NotebookHeader({ onCreate, onScan, onQuillBotCheck, onGrammarlyF
             >
               <Search size={10} strokeWidth={3} />
               Grammarly Check
+            </button>
+
+            <button 
+              onClick={onToneScan}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase hover:bg-indigo-100 transition-all hover:scale-105 active:scale-95"
+              title="Analyze Document Tone"
+            >
+              <Sliders size={10} strokeWidth={3} />
+              Tone Check
             </button>
 
             <button 

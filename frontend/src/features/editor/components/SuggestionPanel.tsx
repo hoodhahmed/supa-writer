@@ -4,6 +4,13 @@ import { Sparkles, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 interface Version {
   text: string;
   score?: number | null;
+  tone?: {
+    friendly: number;
+    formal: number;
+    clear: number;
+    simple: number;
+    concise: number;
+  } | null;
 }
 
 interface SuggestionPanelProps {
@@ -29,9 +36,17 @@ function scoreColor(score: number | null) {
   return '#F59E0B';
 }
 
+function getTopTone(tone?: Version['tone']) {
+  if (!tone) return null;
+  const entries = Object.entries(tone);
+  const top = entries.reduce((a, b) => a[1] > b[1] ? a : b);
+  return { label: top[0].toUpperCase(), score: Math.round(top[1] * 100) };
+}
+
 export function SuggestionPanel({ versions, index, onApply, onReject, onRegenerate, onPrev, onNext }: SuggestionPanelProps) {
   const current = versions[index];
   const aiScore = computeAIScore(current?.score ?? null);
+  const topTone = getTopTone(current?.tone);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
 
@@ -161,6 +176,17 @@ export function SuggestionPanel({ versions, index, onApply, onReject, onRegenera
                 letterSpacing: '0.02em',
               }}>
                 AI {aiScore}%
+              </span>
+            )}
+            
+            {topTone && (
+              <span style={{
+                fontSize: 10, fontWeight: 600, padding: '2px 8px',
+                borderRadius: 20, background: '#EEF2FF',
+                border: '1px solid #e0e7ff', color: '#6366F1',
+                letterSpacing: '0.02em',
+              }} title={`Tone Confidence: ${topTone.score}%`}>
+                {topTone.label}
               </span>
             )}
             <span style={{

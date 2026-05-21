@@ -3,7 +3,7 @@ import json
 import os
 import threading
 from dataclasses import dataclass, asdict
-from typing import Optional
+from typing import Optional, List
 from playwright.sync_api import sync_playwright
 from curl_cffi import requests
 
@@ -164,6 +164,37 @@ class QuillBotClient:
                 self.manager.refresh(s)
             except Exception as e:
                 print(f"DEBUG: Exception during QuillBot check (Attempt {i+1}): {e}")
+                last_error = e
+                self.manager.refresh(s)
+
+    def detect_tone(self, texts: List[str], retries: int = 3):
+        url = "https://quillbot.com/api/utils/tone-detection"
+        payload = {"text": texts}
+        last_error = None
+
+        for i in range(retries):
+            s = self.manager.get()
+            try:
+                # Optimized: removed _session_lock
+                response = self._session.post(
+                    url,
+                    headers=s.headers,
+                    cookies=s.cookies,
+                    json=payload,
+                    impersonate="chrome120",
+                    timeout=30
+                )
+
+                if response.status_code == 200:
+                    return response.json()
+
+                if response.status_code in [401, 403, 429]:
+                    self.manager.refresh(s)
+                    continue
+                
+                self.manager.refresh(s)
+            except Exception as e:
+                print(f"DEBUG: Exception during QuillBot tone check (Attempt {i+1}): {e}")
                 last_error = e
                 self.manager.refresh(s)
 

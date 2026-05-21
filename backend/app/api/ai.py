@@ -3,7 +3,7 @@ import re
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 from starlette.concurrency import run_in_threadpool
-from app.schemas.document import AIScoreInput, AIScoreOutput, HumanizeInput, HumanizeOutput, GrammarlyScoreOutput, QuillBotScoreOutput
+from app.schemas.document import AIScoreInput, AIScoreOutput, HumanizeInput, HumanizeOutput, GrammarlyScoreOutput, QuillBotScoreOutput, QuillBotToneOutput
 from app.core.config import settings
 from app.api.grammarly_client import grammarly_client
 from app.api.quillbot_client import quillbot_client
@@ -37,6 +37,16 @@ async def get_quillbot_score(input_data: AIScoreInput):
         return result
     except Exception as e:
         print(f"DEBUG: QuillBot AI Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/tone", response_model=QuillBotToneOutput)
+async def get_tone_analysis(input_data: AIScoreInput):
+    try:
+        # texts is a list for the API, but we accept a single documentText for consistency
+        result = await run_in_threadpool(quillbot_client.detect_tone, [input_data.documentText])
+        return result
+    except Exception as e:
+        print(f"DEBUG: QuillBot Tone Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 def build_fallback_ai_score(document_text: str, feedback: str) -> AIScoreOutput:
@@ -169,9 +179,21 @@ async def humanize_text(input_data: HumanizeInput):
         if result.get("error"):
             raise HTTPException(status_code=400, detail=result["error"])
 
+        humanizedText = result.get("data", {}).get("humanized_text", input_data.text)
+        score = result.get("data", {}).get("wh_score")
+
+        # Get tone for the humanized text
+        tone_scores = None
+        try:
+            tone_res = await run_in_threadpool(quillbot_client.detect_tone, [humanizedText])
+            tone_scores = tone_res.get("data", {}).get("averageScore")
+        except Exception as e:
+            print(f"DEBUG: Failed to get tone for humanized text: {e}")
+
         return HumanizeOutput(
-            humanizedText=result.get("data", {}).get("humanized_text", input_data.text),
-            score=result.get("data", {}).get("wh_score")
+            humanizedText=humanizedText,
+            score=score,
+            tone=tone_scores
         )
     except HTTPException:
         raise

@@ -17,7 +17,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
   background: #F1F4F6; /* Slightly deeper background to make ivory paper pop */
   overflow: hidden;
   padding-top: 8px;
@@ -39,6 +39,7 @@
   z-index: 50;
   flex-shrink: 0;
   box-shadow: var(--paper-shadow);
+  width: auto; /* Ensure it doesn't overflow with margins */
 }
 
 .napkin-header-left {
@@ -367,17 +368,34 @@
   flex-direction: column;
   overflow: hidden;
   position: relative;
+  transition: padding-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Adjust balancing padding when sidebar is collapsed */
+.napkin-sidebar-collapsed + .napkin-main .napkin-canvas-wrapper {
+  padding-right: calc(56px + 32px); /* 56px collapsed width */
+}
+
+/* Disable True Centering on smaller screens to preserve workspace, but leave room for the bubble */
+@media (max-width: 1200px) {
+  .napkin-canvas-wrapper {
+    padding-right: 120px !important;
+  }
 }
 
 /* ---- Canvas wrapper — dot grid background ---- */
 .napkin-canvas-wrapper {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   justify-content: center;
   align-items: flex-start;
   padding: 16px 32px 48px;
   position: relative;
+
+  /* True Centering inside the scroll wrapper so overflow doesn't clip */
+  padding-right: calc(var(--napkin-sidebar-width) + 32px);
 
   /* Premium subtle dot grid */
   background-color: transparent; /* Parent .napkin-app handles background now */
@@ -389,6 +407,7 @@
 .napkin-paper {
   width: 100%;
   max-width: 840px;
+  margin: 0 auto; /* Ensure horizontal centering */
   min-height: calc(100vh - var(--napkin-header-height) - 48px);
   background: var(--paper-ivory);
   border-radius: 4px 16px 16px 4px; /* Slight asymmetrical roundness like a book */
@@ -398,7 +417,7 @@
     0 5px 10px -5px rgba(0,0,0,0.04);
   position: relative;
   display: flex;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
@@ -491,16 +510,23 @@
 
 /* Blue left accent (like Napkin screenshot) */
 .napkin-paper-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: 4px;
   background: #33C3FF;
-  flex-shrink: 0;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  z-index: 10;
 }
 
 .napkin-paper-content {
   flex: 1;
   padding: 64px 72px;
-  overflow-y: auto;
+  overflow: visible;
   background-color: var(--paper-ivory);
+  border-radius: inherit;
   /* Subtly darker lined paper effect */
   background-image:
     linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);

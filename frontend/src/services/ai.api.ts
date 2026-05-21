@@ -19,5 +19,10 @@ export const aiApi = {
   getQuillBotScore: async (documentText: string) => {
     const res = await apiClient.post('/ai/quillbot-score', { documentText });
     return res.data;
+  },
+
+  getToneAnalysis: async (documentText: string) => {
+    const res = await apiClient.post('/ai/tone', { documentText });
+    return res.data;
   }
 };

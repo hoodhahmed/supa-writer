@@ -16,7 +16,7 @@ const AboutPage = lazy(() => import('@/components/marketing/site-pages').then(m 
 const PricingPage = lazy(() => import('@/components/marketing/site-pages').then(m => ({ default: m.PricingPage })));
 
 const PageWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="w-full min-h-screen">
+  <div className="w-full min-h-screen overflow-x-hidden">
     {children}
   </div>
 );
