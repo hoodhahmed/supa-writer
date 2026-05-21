@@ -60,6 +60,18 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
     // We use a small state trick to force update when needed
     const [contentVersion, setContentVersion] = useState(0);
     
+    // Force update on resize and scroll to keep overlays aligned
+    useEffect(() => {
+      const handleUpdate = () => setContentVersion(v => v + 1);
+      window.addEventListener('resize', handleUpdate);
+      // Use capture: true to catch scrolls on any parent container (like .napkin-canvas-wrapper)
+      window.addEventListener('scroll', handleUpdate, true);
+      return () => {
+        window.removeEventListener('resize', handleUpdate);
+        window.removeEventListener('scroll', handleUpdate, true);
+      };
+    }, []);
+
     useEffect(() => {
       // Sync editor content with current document
       if (ref && 'current' in ref && ref.current) {
@@ -74,11 +86,7 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
     const fullText = React.useMemo(() => {
       if (!ref || !('current' in ref) || !ref.current) return '';
       const editor = ref.current;
-      const textNodes: Text[] = [];
-      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
-      let node;
-      while ((node = walker.nextNode())) { textNodes.push(node as Text); }
-      return textNodes.map(n => n.textContent || '').join('');
+      return editor.innerText || ''; // Simpler way to get text for matching
     }, [contentVersion, ref]);
 
     // 1. Selection Results (Grammarly fixed to use fullText)
@@ -162,16 +170,18 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
           let currentLen = 0;
           for (const tNode of textNodes) {
             const nodeLen = tNode.textContent?.length || 0;
-            if (!startNode && currentLen + nodeLen > startOffset) {
+            const nodeEnd = currentLen + nodeLen;
+
+            if (!startNode && nodeEnd > startOffset) {
               startNode = tNode;
               startNodeOffset = startOffset - currentLen;
             }
-            if (currentLen + nodeLen >= endOffset) {
+            if (nodeEnd >= endOffset) {
               endNode = tNode;
               endNodeOffset = endOffset - currentLen;
               break;
             }
-            currentLen += nodeLen;
+            currentLen = nodeEnd;
           }
 
           if (startNode && endNode) {
@@ -210,7 +220,7 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
           }}
         />
       ));
-    }, [activeToneIdx, toneData, ref]);
+    }, [activeToneIdx, toneData, contentVersion, ref]);
 
     return (
       <div className="relative w-full">
@@ -241,19 +251,19 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
         </div>
         
         {docScore?.sentences && !isScanning && (
-          <ForensicOverlay color="yellow" sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="yellow" sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} contentVersion={contentVersion} />
         )}
         {quillbotSentences && (
-          <ForensicOverlay color="blue" sentences={quillbotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="blue" sentences={quillbotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} contentVersion={contentVersion} />
         )}
         {grammarlySentences && (
-          <ForensicOverlay color="orange" sentences={grammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="orange" sentences={grammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} contentVersion={contentVersion} />
         )}
         {fullGrammarlySentences && (
-          <ForensicOverlay color="orange" sentences={fullGrammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="orange" sentences={fullGrammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} contentVersion={contentVersion} />
         )}
         {fullQuillBotSentences && (
-          <ForensicOverlay color="blue" sentences={fullQuillBotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+          <ForensicOverlay color="blue" sentences={fullQuillBotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} contentVersion={contentVersion} />
         )}
       </div>
     );

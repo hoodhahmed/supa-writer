@@ -10,6 +10,7 @@ interface ForensicOverlayProps {
   sentences?: Sentence[];
   editorRef: any;
   color?: 'yellow' | 'blue' | 'orange';
+  contentVersion?: number;
 }
 
 interface HighlightRect {
@@ -44,7 +45,7 @@ const COLOR_MAP = {
   }
 };
 
-export function ForensicOverlay({ sentences, editorRef, color = 'orange' }: ForensicOverlayProps) {
+export function ForensicOverlay({ sentences, editorRef, color = 'orange', contentVersion = 0 }: ForensicOverlayProps) {
   const [highlights, setHighlights] = useState<HighlightRect[]>([]);
   const [hoveredSentenceIdx, setHoveredSentenceIdx] = useState<number | null>(null);
   const colors = COLOR_MAP[color];
@@ -137,7 +138,7 @@ export function ForensicOverlay({ sentences, editorRef, color = 'orange' }: Fore
       clearTimeout(timer);
       window.removeEventListener('resize', calculateHighlights);
     };
-  }, [calculateHighlights]);
+  }, [calculateHighlights, contentVersion]);
 
   const handleHighlightClick = useCallback((sentenceIdx: number) => {
     const editor = editorRef && 'current' in editorRef ? editorRef.current : editorRef;
