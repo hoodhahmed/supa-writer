@@ -6,13 +6,14 @@ interface Props {
   y: number;
   onHumanize: () => void;
   onGrammarlyCheck: () => void;
+  onQuillBotCheck: () => void;
   onTone: (tone: string) => void;
   selectedTone?: string;
   onClose?: () => void;
   disabled?: boolean;
 }
 
-export function FloatingToolbar({ x, y, onHumanize, onGrammarlyCheck, onTone, selectedTone = 'Standard', onClose, disabled }: Props) {
+export function FloatingToolbar({ x, y, onHumanize, onGrammarlyCheck, onQuillBotCheck, onTone, selectedTone = 'Standard', onClose, disabled }: Props) {
   const [showToneMenu, setShowToneMenu] = React.useState(false);
   
   const tones = [
@@ -176,6 +177,25 @@ export function FloatingToolbar({ x, y, onHumanize, onGrammarlyCheck, onTone, se
         >
           <Search size={14} strokeWidth={2.5} />
           Grammarly AI
+        </button>
+
+        <button
+          onClick={onQuillBotCheck}
+          disabled={disabled}
+          title="QuillBot AI Check"
+          style={{
+            ...btnBase,
+            background: disabled ? 'rgba(99, 102, 241, 0.5)' : '#6366F1',
+            color: '#fff',
+            opacity: disabled ? 0.7 : 1,
+            padding: '6px 14px',
+            boxShadow: '0 2px 4px rgba(99, 102, 241, 0.2)',
+          }}
+          onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = '#4F46E5'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+          onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#6366F1'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+        >
+          <Sparkles size={14} strokeWidth={2.5} />
+          QuillBot AI
         </button>
       </div>
 

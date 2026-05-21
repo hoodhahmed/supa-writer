@@ -222,7 +222,7 @@ export function ForensicOverlay({ sentences, editorRef }: ForensicOverlayProps) 
           {/* Label centered over the first segment of the hovered sentence */}
           {hoveredSentenceIdx === h.sentenceIdx && h.isFirstOfSentence && (
             <div
-              className="absolute z-[100] pointer-events-none animate-in fade-in zoom-in duration-150"
+              className="absolute z-[100] pointer-events-none"
               style={{
                 top: h.top - 22,
                 left: h.left + (h.width / 2),

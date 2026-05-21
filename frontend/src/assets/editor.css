@@ -515,7 +515,7 @@
 }
 
 .floating-toolbar {
-  animation: toolbar-fade-in 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* Removed animation to make it appear instantly */
   transform-origin: bottom center;
   transform: translate(-50%, -120%);
 }
@@ -540,7 +540,7 @@
   background-color: rgba(255, 87, 34, 0.12);
   border-bottom: 2px solid rgba(255, 87, 34, 0.3);
   border-radius: 2px;
-  transition: all 0.2s ease;
+  /* Removed transition to avoid sliding animation when positions update */
   cursor: help;
   z-index: 1;
 }
