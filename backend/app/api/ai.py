@@ -2,9 +2,10 @@ import httpx
 import re
 from fastapi import APIRouter, HTTPException
 from starlette.concurrency import run_in_threadpool
-from app.schemas.document import AIScoreInput, AIScoreOutput, HumanizeInput, HumanizeOutput, GrammarlyScoreOutput
+from app.schemas.document import AIScoreInput, AIScoreOutput, HumanizeInput, HumanizeOutput, GrammarlyScoreOutput, QuillBotScoreOutput
 from app.core.config import settings
 from app.api.grammarly_client import grammarly_client
+from app.api.quillbot_client import quillbot_client
 
 router = APIRouter()
 
@@ -16,6 +17,16 @@ async def get_grammarly_score(input_data: AIScoreInput):
         return result
     except Exception as e:
         print(f"DEBUG: Grammarly AI Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/quillbot-score", response_model=QuillBotScoreOutput)
+async def get_quillbot_score(input_data: AIScoreInput):
+    try:
+        # Run the sync quillbot client in a threadpool to avoid blocking
+        result = await run_in_threadpool(quillbot_client.check, input_data.documentText)
+        return result
+    except Exception as e:
+        print(f"DEBUG: QuillBot AI Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 def build_fallback_ai_score(document_text: str, feedback: str) -> AIScoreOutput:

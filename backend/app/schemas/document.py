@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Any, Union
 
 class DocumentBase(BaseModel):
     title: str
@@ -51,3 +51,54 @@ class GrammarlyScoreOutput(BaseModel):
     categoryHuman: str
     score: int
     alertRanges: List[GrammarlyAlertRange]
+
+class QuillBotLLMSource(BaseModel):
+    id: Optional[str] = None
+    modelID: Optional[str] = None
+    predictions: Optional[List[Any]] = []
+    is_reliable: Optional[bool] = False
+
+class QuillBotAIPhrase(BaseModel):
+    phrase: str
+    start_span: int
+    end_span: int
+    explanation: str
+
+class QuillBotExplainer(BaseModel):
+    perplexity_score: Optional[float] = None
+    burstiness_score: Optional[float] = None
+    ai_phrases: Optional[List[QuillBotAIPhrase]] = []
+    common_phrases: Optional[List[Any]] = []
+    categories: Optional[List[str]] = []
+    llmSource: Optional[QuillBotLLMSource] = None
+
+class QuillBotChunk(BaseModel):
+    text: str
+    startSpan: int
+    endSpan: int
+    type: str
+    aiScore: float
+    humanParaphrasedScore: float
+    aiParaphrasedScore: float
+    isFailed: bool
+    explainer: Optional[Union[QuillBotExplainer, str, Any]] = None
+
+class QuillBotDataValue(BaseModel):
+    chunks: List[QuillBotChunk]
+    aiScore: float
+    humanParaphrasedScore: float
+    aiParaphrasedScore: float
+    modelVersion: str
+    id: str
+    modelID: str
+
+class QuillBotData(BaseModel):
+    timedOut: bool
+    value: QuillBotDataValue
+
+class QuillBotScoreOutput(BaseModel):
+    message: str
+    traceID: str
+    code: str
+    data: QuillBotData
+    status: int

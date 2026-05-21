@@ -9,12 +9,13 @@ import { cn } from '@/lib/utils';
 interface NotebookHeaderProps {
   onCreate?: () => unknown;
   onScan?: () => void;
+  onQuillBotCheck?: () => void;
   onGrammarlyFullScan?: () => void;
   docScore?: any;
   saved?: boolean;
 }
 
-export function NotebookHeader({ onCreate, onScan, onGrammarlyFullScan, docScore, saved }: NotebookHeaderProps) {
+export function NotebookHeader({ onCreate, onScan, onQuillBotCheck, onGrammarlyFullScan, docScore, saved }: NotebookHeaderProps) {
   const [openAuth, setOpenAuth] = useState(false);
   const { token, signout } = useAuth();
   const location = useLocation();
@@ -75,6 +76,15 @@ export function NotebookHeader({ onCreate, onScan, onGrammarlyFullScan, docScore
                 Check AI
               </button>
             )}
+
+            <button 
+              onClick={onQuillBotCheck}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-600 text-[10px] font-black uppercase hover:bg-blue-100 transition-all hover:scale-105 active:scale-95"
+              title="QuillBot AI Content Detector"
+            >
+              <Sparkles size={10} strokeWidth={3} />
+              QuillBot Check
+            </button>
 
             <button 
               onClick={onGrammarlyFullScan}

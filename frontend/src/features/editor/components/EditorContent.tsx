@@ -7,7 +7,9 @@ interface EditorContentProps {
   documents: EditorDocument[];
   docScore: any | null;
   grammarlyScore: any | null;
+  quillbotScore: any | null;
   fullGrammarlyResults: any[] | null;
+  fullQuillBotResults: any[] | null;
   isScanning: boolean;
   onSelection: () => void;
   onInput: () => void;
@@ -21,7 +23,9 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       documents,
       docScore,
       grammarlyScore,
+      quillbotScore,
       fullGrammarlyResults,
+      fullQuillBotResults,
       isScanning,
       onSelection,
       onInput,
@@ -37,6 +41,17 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
         }
       }
     }, [currentDocId, documents, ref]);
+
+    // Convert QuillBot chunks to sentences format for ForensicOverlay
+    const quillbotSentences = React.useMemo(() => {
+      if (!quillbotScore?.data?.value?.chunks) return null;
+      
+      return quillbotScore.data.value.chunks.map((chunk: any) => ({
+        text: chunk.text,
+        aiProbability: chunk.aiScore * 100,
+        isAI: chunk.aiScore > 0.2 // threshold for AI detection display
+      }));
+    }, [quillbotScore]);
 
     // Convert Grammarly alertRanges to sentences format for ForensicOverlay
     const grammarlySentences = React.useMemo(() => {
@@ -93,6 +108,24 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       return allSentences;
     }, [fullGrammarlyResults, ref]);
 
+    // Convert full QuillBot scan results (multi-paragraph) to sentences
+    const fullQuillBotSentences = React.useMemo(() => {
+      if (!fullQuillBotResults || !ref || !('current' in ref) || !ref.current) return null;
+      
+      const allSentences: any[] = [];
+      fullQuillBotResults.forEach(res => {
+        if (!res.data?.value?.chunks) return;
+        res.data.value.chunks.forEach((chunk: any) => {
+          allSentences.push({
+            text: chunk.text,
+            aiProbability: chunk.aiScore * 100,
+            isAI: chunk.aiScore > 0.2
+          });
+        });
+      });
+      return allSentences;
+    }, [fullQuillBotResults, ref]);
+
     return (
       <div className="relative w-full">
         <div
@@ -107,11 +140,17 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
         {docScore?.sentences && !isScanning && (
           <ForensicOverlay sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
+        {quillbotSentences && (
+          <ForensicOverlay sentences={quillbotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+        )}
         {grammarlySentences && (
           <ForensicOverlay sentences={grammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
         {fullGrammarlySentences && (
           <ForensicOverlay sentences={fullGrammarlySentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
+        )}
+        {fullQuillBotSentences && (
+          <ForensicOverlay sentences={fullQuillBotSentences} editorRef={ref as ForwardedRef<HTMLDivElement>} />
         )}
       </div>
     );

@@ -1,12 +1,13 @@
 import time
 import json
 import os
+import threading
 from dataclasses import dataclass, asdict
 from typing import Optional
 from playwright.sync_api import sync_playwright
 from curl_cffi import requests
 
-CACHE_FILE = "session.json"
+CACHE_FILE = "grammarly_session.json"
 
 @dataclass
 class Session:
@@ -33,6 +34,8 @@ def load_session() -> Optional[Session]:
         return None
 
 def create_session() -> Session:
+    print("DEBUG: Creating new Grammarly session via Playwright...")
+    start_time = time.time()
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context()
@@ -43,6 +46,7 @@ def create_session() -> Session:
             wait_until="domcontentloaded"
         )
 
+        # Wait for cookies to be set
         page.wait_for_timeout(2000)
         cookies = {c["name"]: c["value"] for c in context.cookies()}
 
@@ -82,40 +86,57 @@ def create_session() -> Session:
         )
 
         save_session(session)
+        print(f"DEBUG: Grammarly session created in {time.time() - start_time:.2f}s")
         return session
 
 class SessionManager:
     def __init__(self, ttl=600):
         self.ttl = ttl
         self.session: Optional[Session] = None
+        self._lock = threading.Lock()
 
-    def expired(self):
-        return (
-            not self.session
-            or (time.time() - self.session.timestamp) > self.ttl
-        )
+    def is_expired(self, session: Optional[Session] = None):
+        s = session or self.session
+        if not s:
+            return True
+        return (time.time() - s.timestamp) > self.ttl
 
-    def refresh(self):
-        self.session = create_session()
+    def refresh(self, old_session: Optional[Session] = None):
+        with self._lock:
+            # If we were given an old session, only refresh if it's still the current one
+            if old_session and self.session and self.session != old_session:
+                print("DEBUG: Grammarly session already refreshed by another thread.")
+                return self.session
+            
+            print("DEBUG: Refreshing Grammarly session...")
+            self.session = create_session()
+            return self.session
 
     def get(self):
-        if not self.expired():
+        # 1. Fast path: check in-memory session without lock
+        if self.session and not self.is_expired(self.session):
             return self.session
 
-        cached = load_session()
-        if cached and (time.time() - cached.timestamp) <= self.ttl:
-            self.session = cached
-            return self.session
+        with self._lock:
+            # 2. Check in-memory again under lock
+            if self.session and not self.is_expired(self.session):
+                return self.session
 
-        self.refresh()
-        return self.session
+            # 3. Try loading from cache
+            cached = load_session()
+            if cached and not self.is_expired(cached):
+                print("DEBUG: Loaded Grammarly session from cache.")
+                self.session = cached
+                return self.session
+
+            # 4. If still no valid session, create one
+            print("DEBUG: Grammarly session expired or missing. Refreshing...")
+            self.session = create_session()
+            return self.session
 
 class APIClient:
     def __init__(self, manager: SessionManager):
         self.manager = manager
-        # We'll create a new session for each request or reuse if possible
-        # but curl_cffi sessions might need to be handled carefully in async environments
-        # though this script is sync.
 
     def headers(self, s: Session):
         return {
@@ -134,10 +155,9 @@ class APIClient:
         url = "https://capi.grammarly.com/api/check/aidetector"
         last_error = None
 
-        for _ in range(retries):
+        for i in range(retries):
             s = self.manager.get()
             try:
-                # Use a fresh request session each time to avoid cookie pollution if any
                 with requests.Session() as session:
                     r = session.post(
                         url,
@@ -151,14 +171,16 @@ class APIClient:
                     if r.status_code == 200:
                         return r.json()
                     
-                    print(f"Grammarly API error: {r.status_code} - {r.text}")
-                    self.manager.refresh()
+                    print(f"DEBUG: Grammarly API error (Attempt {i+1}): {r.status_code} - {r.text}")
+                    if r.status_code in [401, 403]:
+                        self.manager.refresh(s)
             except Exception as e:
-                print(f"Exception during Grammarly check: {e}")
+                print(f"DEBUG: Exception during Grammarly check (Attempt {i+1}): {e}")
                 last_error = e
-                self.manager.refresh()
+                self.manager.refresh(s)
 
         raise RuntimeError(f"Failed after retries: {last_error}")
+
 
 # Global instances
 grammarly_manager = SessionManager(ttl=600)

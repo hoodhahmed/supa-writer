@@ -59,9 +59,12 @@ export function EssenceEditor() {
 
   const [isScanning, setIsScanning] = useState(false);
   const [isGrammarlyChecking, setIsGrammarlyChecking] = useState(false);
+  const [isQuillBotChecking, setIsQuillBotChecking] = useState(false);
   const [docScore, setDocScore] = useState<any | null>(null);
   const [grammarlyScore, setGrammarlyScore] = useState<any | null>(null);
+  const [quillbotScore, setQuillbotScore] = useState<any | null>(null);
   const [fullGrammarlyResults, setFullGrammarlyResults] = useState<any[] | null>(null);
+  const [fullQuillBotResults, setFullQuillBotResults] = useState<any[] | null>(null);
   const [selectionOffset, setSelectionOffset] = useState<number>(0);
   const [isSaved, setIsSaved] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -92,7 +95,9 @@ export function EssenceEditor() {
   const handleInput = useCallback(() => {
     if (docScore) setDocScore(null);
     if (grammarlyScore) setGrammarlyScore(null);
+    if (quillbotScore) setQuillbotScore(null);
     if (fullGrammarlyResults) setFullGrammarlyResults(null);
+    if (fullQuillBotResults) setFullQuillBotResults(null);
     setIsSaved(false);
     if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
@@ -101,7 +106,79 @@ export function EssenceEditor() {
       persistDocument(currentDocId, editorRef.current);
       setIsSaved(true);
     }, 1500);
-  }, [currentDocId, docScore, handleScan, persistDocument]);
+  }, [currentDocId, docScore, handleScan, persistDocument, quillbotScore]);
+
+  const handleQuillBotCheck = useCallback(async () => {
+    if (!editorRef.current) return;
+    
+    setIsQuillBotChecking(true);
+    setFullQuillBotResults(null);
+    setQuillbotScore(null);
+    setGrammarlyScore(null);
+    setFullGrammarlyResults(null);
+    setDocScore(null);
+
+    try {
+      const editor = editorRef.current;
+      const paragraphs: { text: string; offset: number }[] = [];
+      
+      let cumulativeOffset = 0;
+      const textNodes: Text[] = [];
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+      let node;
+      while ((node = walker.nextNode())) {
+        textNodes.push(node as Text);
+      }
+      const fullText = textNodes.map(n => n.textContent || '').join('');
+
+      const blockElements = editor.querySelectorAll('p, div, blockquote');
+      blockElements.forEach((el) => {
+        const text = el.textContent?.trim() || '';
+        const isHeading = /h[1-6]/i.test(el.tagName);
+        const isReference = text.toLowerCase().includes('reference') || text.toLowerCase().startsWith('[');
+        
+        if (text.length > 20 && !isHeading && !isReference) {
+          const idx = fullText.indexOf(text, cumulativeOffset);
+          if (idx !== -1) {
+            paragraphs.push({ text, offset: idx });
+            cumulativeOffset = idx + text.length;
+          }
+        }
+      });
+
+      if (paragraphs.length === 0) {
+        toast("No suitable paragraphs found for scanning.", "info");
+        setIsQuillBotChecking(false);
+        return;
+      }
+
+      toast(`Scanning ${paragraphs.length} paragraphs with QuillBot...`, "info");
+
+      const scanResults = await Promise.all(
+        paragraphs.map(async (p) => {
+          try {
+            const res = await api.getQuillBotScore(p.text);
+            return { ...res, offset: p.offset };
+          } catch (e) {
+            console.error('QuillBot paragraph scan failed', e);
+            return null;
+          }
+        })
+      );
+
+      const validResults = scanResults.filter(Boolean);
+      setFullQuillBotResults(validResults);
+      
+      const totalAI = validResults.filter(r => r.data?.value?.aiScore > 0.5).length;
+      toast(`QuillBot scan complete. Found AI in ${totalAI}/${paragraphs.length} sections.`, totalAI > 0 ? "error" : "success");
+
+    } catch (error) {
+      console.error('Full QuillBot scan failed:', error);
+      toast("Failed to perform QuillBot AI check.", "error");
+    } finally {
+      setIsQuillBotChecking(false);
+    }
+  }, [toast]);
 
   const handlePaste = (e: ClipboardEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -260,6 +337,7 @@ export function EssenceEditor() {
     setToolbarPos(null);
     setDocScore(null);
     setGrammarlyScore(null);
+    setQuillbotScore(null);
     setFullGrammarlyResults(null);
     handleInput();
   }, [versions, setEditorSelection, setToolbarPos, handleInput]);
@@ -270,6 +348,7 @@ export function EssenceEditor() {
     setVersionIndex(0);
     setEditorSelection('');
     setToolbarPos(null);
+    setQuillbotScore(null);
   }, [setEditorSelection, setToolbarPos]);
 
   const regenerateVersion = useCallback(async (index: number) => {
@@ -307,6 +386,7 @@ export function EssenceEditor() {
 
     setIsGrammarlyChecking(true);
     setGrammarlyScore(null);
+    setQuillbotScore(null);
     const offsetAtTrigger = selectionOffset; // Capture current offset
     try {
       const result = await api.getGrammarlyScore(textToCheck);
@@ -331,6 +411,7 @@ export function EssenceEditor() {
     setIsGrammarlyChecking(true);
     setFullGrammarlyResults(null);
     setGrammarlyScore(null);
+    setQuillbotScore(null);
     setDocScore(null);
 
     try {
@@ -425,6 +506,7 @@ export function EssenceEditor() {
       <NotebookHeader 
         onCreate={createNewDoc} 
         onScan={handleScan} 
+        onQuillBotCheck={handleQuillBotCheck}
         onGrammarlyFullScan={handleGrammarlyFullScan}
         docScore={docScore} 
         saved={isSaved} 
@@ -445,14 +527,16 @@ export function EssenceEditor() {
 
         {/* Main content area */}
         <main className="napkin-main">
-          <NotebookCanvas isRewriting={isHumanizing} isScanning={isScanning || isGrammarlyChecking}>
+          <NotebookCanvas isRewriting={isHumanizing} isScanning={isScanning || isGrammarlyChecking || isQuillBotChecking}>
             <EditorContent
               ref={editorRef}
               currentDocId={currentDocId}
               documents={documents}
               docScore={docScore}
               grammarlyScore={grammarlyScore}
+              quillbotScore={quillbotScore}
               fullGrammarlyResults={fullGrammarlyResults}
+              fullQuillBotResults={fullQuillBotResults}
               isScanning={isScanning}
               onSelection={handleSelection}
               onInput={handleInput}

@@ -14,5 +14,10 @@ export const aiApi = {
   getGrammarlyScore: async (documentText: string) => {
     const res = await apiClient.post('/ai/grammarly-score', { documentText });
     return res.data;
+  },
+
+  getQuillBotScore: async (documentText: string) => {
+    const res = await apiClient.post('/ai/quillbot-score', { documentText });
+    return res.data;
   }
 };
