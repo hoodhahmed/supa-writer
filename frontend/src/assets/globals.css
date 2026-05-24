@@ -128,8 +128,10 @@ body {
   z-index: 100;
   position: sticky;
   top: 0;
-  width: 100%;
+  width: auto;
+  margin: 0 16px 8px;
   flex-shrink: 0;
+  border-radius: 12px;
 }
 
 .napkin-header-left, .napkin-header-right {

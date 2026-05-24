@@ -65,15 +65,17 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-full">
-      <NotebookHeader onCreate={() => { createNewDoc(); navigate('/app'); }} />
+    <div className="w-full flex flex-col items-center">
+      <div className="w-full max-w-4xl">
+        <NotebookHeader onCreate={() => { createNewDoc(); navigate('/app'); }} />
+      </div>
       
-      <main className="py-16 px-6">
+      <main className="w-full max-w-4xl py-16 px-6">
         <motion.div 
           initial="hidden"
           animate="visible"
           variants={containerVariants}
-          className="max-w-4xl mx-auto"
+          className="w-full"
         >
           <motion.div variants={sectionVariants} className="mb-12 text-center">
             <h1 className="text-5xl font-black tracking-tighter leading-tight text-[#484848] font-creative">Settings</h1>

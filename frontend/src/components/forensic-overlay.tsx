@@ -9,6 +9,8 @@ interface Sentence {
 interface ForensicOverlayProps {
   sentences?: Sentence[];
   editorRef: any;
+  color?: 'yellow' | 'blue' | 'orange';
+  contentVersion?: number;
 }
 
 interface HighlightRect {
@@ -22,9 +24,31 @@ interface HighlightRect {
   isFirstOfSentence?: boolean;
 }
 
-export function ForensicOverlay({ sentences, editorRef }: ForensicOverlayProps) {
+const COLOR_MAP = {
+  yellow: {
+    bg: 'rgba(251, 191, 36, 0.18)',
+    border: 'rgba(251, 191, 36, 0.5)',
+    label: '#D97706',
+    hover: 'rgba(251, 191, 36, 0.3)'
+  },
+  blue: {
+    bg: 'rgba(59, 130, 246, 0.15)',
+    border: 'rgba(59, 130, 246, 0.4)',
+    label: '#2563EB',
+    hover: 'rgba(59, 130, 246, 0.25)'
+  },
+  orange: {
+    bg: 'rgba(255, 87, 34, 0.12)',
+    border: 'rgba(255, 87, 34, 0.3)',
+    label: '#EA580C',
+    hover: 'rgba(255, 87, 34, 0.2)'
+  }
+};
+
+export function ForensicOverlay({ sentences, editorRef, color = 'orange', contentVersion = 0 }: ForensicOverlayProps) {
   const [highlights, setHighlights] = useState<HighlightRect[]>([]);
   const [hoveredSentenceIdx, setHoveredSentenceIdx] = useState<number | null>(null);
+  const colors = COLOR_MAP[color];
 
   const calculateHighlights = useCallback(() => {
     const editor = editorRef && 'current' in editorRef ? editorRef.current : editorRef;
@@ -114,7 +138,7 @@ export function ForensicOverlay({ sentences, editorRef }: ForensicOverlayProps) 
       clearTimeout(timer);
       window.removeEventListener('resize', calculateHighlights);
     };
-  }, [calculateHighlights]);
+  }, [calculateHighlights, contentVersion]);
 
   const handleHighlightClick = useCallback((sentenceIdx: number) => {
     const editor = editorRef && 'current' in editorRef ? editorRef.current : editorRef;
@@ -216,26 +240,39 @@ export function ForensicOverlay({ sentences, editorRef }: ForensicOverlayProps) 
               height: h.height,
               pointerEvents: 'auto',
               cursor: 'pointer',
+              backgroundColor: hoveredSentenceIdx === h.sentenceIdx ? colors.hover : colors.bg,
+              borderBottom: `2px solid ${colors.border}`,
+              borderRadius: '2px',
+              zIndex: 1,
             }}
           />
           
           {/* Label centered over the first segment of the hovered sentence */}
           {hoveredSentenceIdx === h.sentenceIdx && h.isFirstOfSentence && (
             <div
-              className="absolute z-[100] pointer-events-none animate-in fade-in zoom-in duration-150"
+              className="absolute z-[100] pointer-events-none"
               style={{
                 top: h.top - 22,
                 left: h.left + (h.width / 2),
                 transform: 'translateX(-50%)',
               }}
             >
-              <div className="bg-orange-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1 border border-orange-700/50">
+              <div 
+                className="text-white text-[10px] font-black px-1.5 py-0.5 rounded shadow-sm flex items-center gap-1 border"
+                style={{
+                  backgroundColor: colors.label,
+                  borderColor: `${colors.label}80` // 50% opacity
+                }}
+              >
                 <span className="opacity-80">AI</span>
                 {Math.round(h.probability)}%
               </div>
               {/* Little arrow down */}
               <div 
-                className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[4px] border-t-orange-600 mx-auto" 
+                className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent mx-auto" 
+                style={{
+                  borderTop: `4px solid ${colors.label}`
+                }}
               />
             </div>
           )}
