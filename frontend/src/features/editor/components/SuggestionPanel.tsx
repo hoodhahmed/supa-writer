@@ -1,16 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Sparkles, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 
+interface QualityScores {
+  score: number;
+  engagementScore: number;
+  fluencyScore: number;
+  clarityScore: number;
+  deliveryScore: number;
+  unclearScore: number;
+}
+
 interface Version {
   text: string;
   score?: number | null;
-  tone?: {
-    friendly: number;
-    formal: number;
-    clear: number;
-    simple: number;
-    concise: number;
-  } | null;
+  quality?: QualityScores[] | null;
 }
 
 interface SuggestionPanelProps {
@@ -36,37 +39,29 @@ function scoreColor(score: number | null) {
   return '#F59E0B';
 }
 
-function getAllTones(tone?: Version['tone']) {
-  if (!tone) return [];
-  return Object.entries(tone)
-    .filter(([_, val]) => val > 0.01) // Only show tones with at least 1%
-    .sort((a, b) => b[1] - a[1])
-    .map(([key, val]) => ({
-      key,
-      label: key.toUpperCase(),
-      score: Math.round(val * 100)
-    }));
-}
-
-const TONE_STYLE: Record<string, { bg: string; border: string; color: string }> = {
-  friendly: { bg: '#ECFDF5', border: '#D1FAE5', color: '#059669' },
-  formal: { bg: '#EFF6FF', border: '#DBEAFE', color: '#2563EB' },
-  clear: { bg: '#F5F3FF', border: '#EDE9FE', color: '#7C3AED' },
-  simple: { bg: '#FEFCE8', border: '#FEF9C3', color: '#CA8A04' },
-  concise: { bg: '#FFF7ED', border: '#FFEDD5', color: '#EA580C' },
-  default: { bg: '#F9FAFB', border: '#F3F4F6', color: '#6B7280' },
-};
-
 export function SuggestionPanel({ versions, index, onApply, onReject, onRegenerate, onPrev, onNext }: SuggestionPanelProps) {
   const current = versions[index];
   const aiScore = computeAIScore(current?.score ?? null);
-  const allTones = getAllTones(current?.tone);
+  
+  // Average quality scores if multiple sentences
+  const avgQuality = React.useMemo(() => {
+    if (!current?.quality || current.quality.length === 0) return null;
+    const len = current.quality.length;
+    return {
+      score: current.quality.reduce((acc, s) => acc + s.score, 0) / len,
+      engagementScore: current.quality.reduce((acc, s) => acc + s.engagementScore, 0) / len,
+      fluencyScore: current.quality.reduce((acc, s) => acc + s.fluencyScore, 0) / len,
+      clarityScore: current.quality.reduce((acc, s) => acc + s.clarityScore, 0) / len,
+      deliveryScore: current.quality.reduce((acc, s) => acc + s.deliveryScore, 0) / len,
+    };
+  }, [current]);
+
   const panelRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
 
   // Smaller default size
   const DEFAULT_W = 620;
-  const DEFAULT_H = 190;
+  const DEFAULT_H = 220; // Increased height for quality metrics
 
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   const resizingRef = useRef(false);
@@ -193,19 +188,34 @@ export function SuggestionPanel({ versions, index, onApply, onReject, onRegenera
               </span>
             )}
             
-            {allTones.map((t) => {
-              const style = TONE_STYLE[t.key] || TONE_STYLE.default;
-              return (
-                <span key={t.key} style={{
+            {avgQuality && (
+              <>
+                <span style={{
                   fontSize: 10, fontWeight: 600, padding: '2px 8px',
-                  borderRadius: 20, background: style.bg,
-                  border: `1px solid ${style.border}`, color: style.color,
+                  borderRadius: 20, background: '#ECFDF5',
+                  border: '1px solid #D1FAE5', color: '#059669',
                   letterSpacing: '0.02em',
                 }}>
-                  {t.label} {t.score}%
+                  Overall {Math.round(avgQuality.score * 100)}%
                 </span>
-              );
-            })}
+                <span style={{
+                  fontSize: 10, fontWeight: 600, padding: '2px 8px',
+                  borderRadius: 20, background: '#EFF6FF',
+                  border: '1px solid #DBEAFE', color: '#2563EB',
+                  letterSpacing: '0.02em',
+                }}>
+                  Eng. {Math.round(avgQuality.engagementScore * 100)}%
+                </span>
+                <span style={{
+                  fontSize: 10, fontWeight: 600, padding: '2px 8px',
+                  borderRadius: 20, background: '#F5F3FF',
+                  border: '1px solid #EDE9FE', color: '#7C3AED',
+                  letterSpacing: '0.02em',
+                }}>
+                  Fluency {Math.round(avgQuality.fluencyScore * 100)}%
+                </span>
+              </>
+            )}
 
             {/* Close */}
             <button

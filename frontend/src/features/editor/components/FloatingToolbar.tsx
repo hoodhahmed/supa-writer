@@ -10,12 +10,18 @@ interface Props {
   onToneCheck: () => void;
   onTone: (tone: string) => void;
   selectedTone?: string;
+  qualityScoreMode?: 'sentence' | 'paragraph';
+  setQualityScoreMode?: (mode: 'sentence' | 'paragraph') => void;
   onClose?: () => void;
   disabled?: boolean;
 }
 
-export function FloatingToolbar({ x, y, onHumanize, onGrammarlyCheck, onQuillBotCheck, onToneCheck, onTone, selectedTone = 'Standard', onClose, disabled }: Props) {
+export function FloatingToolbar({ 
+  x, y, onHumanize, onGrammarlyCheck, onQuillBotCheck, onToneCheck, onTone, 
+  selectedTone = 'Standard', qualityScoreMode = 'sentence', setQualityScoreMode, onClose, disabled 
+}: Props) {
   const [showToneMenu, setShowToneMenu] = React.useState(false);
+  const [showQualityMenu, setShowQualityMenu] = React.useState(false);
   
   const tones = [
     { label: 'Standard', value: 'Standard' },
@@ -199,24 +205,86 @@ export function FloatingToolbar({ x, y, onHumanize, onGrammarlyCheck, onQuillBot
           QuillBot AI
         </button>
 
-        <button
-          onClick={onToneCheck}
-          disabled={disabled}
-          title="Detect Tone"
-          style={{
-            ...btnBase,
-            background: disabled ? 'rgba(129, 140, 248, 0.5)' : '#818CF8',
-            color: '#fff',
-            opacity: disabled ? 0.7 : 1,
-            padding: '6px 14px',
-            boxShadow: '0 2px 4px rgba(129, 140, 248, 0.2)',
-          }}
-          onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = '#6366F1'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-          onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#818CF8'; e.currentTarget.style.transform = 'translateY(0)'; } }}
-        >
-          <Sliders size={14} strokeWidth={2.5} />
-          Detect Tone
-        </button>
+        <div style={{ position: 'relative', display: 'flex', gap: 1 }}>
+          <button
+            onClick={onToneCheck}
+            disabled={disabled}
+            title={`Quality Check (${qualityScoreMode})`}
+            style={{
+              ...btnBase,
+              background: disabled ? 'rgba(129, 140, 248, 0.5)' : '#818CF8',
+              color: '#fff',
+              opacity: disabled ? 0.7 : 1,
+              padding: '6px 14px',
+              borderTopRightRadius: 0,
+              borderBottomRightRadius: 0,
+              boxShadow: '0 2px 4px rgba(129, 140, 248, 0.2)',
+            }}
+            onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = '#6366F1'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+            onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#818CF8'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+          >
+            <Sliders size={14} strokeWidth={2.5} />
+            Quality Check
+          </button>
+          
+          <button
+            onClick={() => setShowQualityMenu(!showQualityMenu)}
+            disabled={disabled}
+            style={{
+              ...btnBase,
+              background: disabled ? 'rgba(129, 140, 248, 0.5)' : '#818CF8',
+              color: '#fff',
+              opacity: disabled ? 0.7 : 1,
+              padding: '6px 4px',
+              borderTopLeftRadius: 0,
+              borderBottomLeftRadius: 0,
+              borderLeft: '1px solid rgba(255,255,255,0.2)',
+            }}
+            onMouseEnter={e => { if (!disabled) { e.currentTarget.style.background = '#6366F1'; } }}
+            onMouseLeave={e => { if (!disabled) { e.currentTarget.style.background = '#818CF8'; } }}
+          >
+            <AlignJustify size={12} />
+          </button>
+
+          {showQualityMenu && (
+            <div style={{
+              position: 'absolute',
+              bottom: '100%',
+              left: '50%',
+              transform: 'translateX(-50%) translateY(-8px)',
+              background: '#333333',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 10,
+              padding: '4px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              minWidth: 100,
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.4)',
+              zIndex: 100,
+            }}>
+              {(['sentence', 'paragraph'] as const).map(m => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    setQualityScoreMode?.(m);
+                    setShowQualityMenu(false);
+                  }}
+                  style={{
+                    ...btnBase,
+                    textAlign: 'left',
+                    padding: '6px 10px',
+                    width: '100%',
+                    background: qualityScoreMode === m ? 'rgba(129, 140, 248, 0.2)' : 'transparent',
+                    color: qualityScoreMode === m ? '#818CF8' : '#E5E7EB',
+                  }}
+                >
+                  {m.charAt(0).toUpperCase() + m.slice(1)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tone */}
