@@ -200,6 +200,37 @@ class QuillBotClient:
 
         raise RuntimeError(f"Failed after {retries} retries. Last error: {last_error}")
 
+    def get_quality_score(self, payload: dict, retries: int = 3):
+        url = "https://quillbot.com/api/utils/quality-score-with-context"
+        last_error = None
+
+        for i in range(retries):
+            s = self.manager.get()
+            try:
+                response = self._session.post(
+                    url,
+                    headers=s.headers,
+                    cookies=s.cookies,
+                    json=payload,
+                    impersonate="chrome120",
+                    timeout=30
+                )
+
+                if response.status_code == 200:
+                    return response.json()
+
+                if response.status_code in [401, 403, 429]:
+                    self.manager.refresh(s)
+                    continue
+                
+                self.manager.refresh(s)
+            except Exception as e:
+                print(f"DEBUG: Exception during QuillBot quality score check (Attempt {i+1}): {e}")
+                last_error = e
+                self.manager.refresh(s)
+
+        raise RuntimeError(f"Failed after {retries} retries. Last error: {last_error}")
+
 
 quillbot_manager = SessionManager(ttl=1800)
 quillbot_client = QuillBotClient(quillbot_manager)

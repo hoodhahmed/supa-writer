@@ -1,6 +1,7 @@
 import React, { forwardRef, type ForwardedRef, useState, useEffect } from 'react';
 import { ForensicOverlay } from '@/components/forensic-overlay';
-import { ToneBubble } from '@/components/tone-bubble';
+import { QualityCard } from '@/components/quality-card';
+import { cn } from '@/lib/utils';
 import type { Document as EditorDocument } from '@/types/editor';
 
 interface EditorContentProps {
@@ -11,8 +12,14 @@ interface EditorContentProps {
   quillbotScore: any | null;
   fullGrammarlyResults: any[] | null;
   fullQuillBotResults: any[] | null;
-  fullToneResults: any[] | null;
+  fullQualityResults: any[] | null;
   isScanning: boolean;
+  activeQualityId: number | null;
+  setActiveQualityId: (id: number | null) => void;
+  hoveredQualityId: number | null;
+  setHoveredQualityId: (id: number | null) => void;
+  cardPos: { x: number; y: number } | null;
+  setCardPos: (pos: { x: number; y: number } | null) => void;
   onSelection: () => void;
   onInput: () => void;
   onPaste: (e: React.ClipboardEvent<HTMLDivElement>) => void;
@@ -28,24 +35,20 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       quillbotScore,
       fullGrammarlyResults,
       fullQuillBotResults,
-      fullToneResults,
+      fullQualityResults,
       isScanning,
+      activeQualityId,
+      setActiveQualityId,
+      hoveredQualityId,
+      setHoveredQualityId,
+      cardPos,
+      setCardPos,
       onSelection,
       onInput,
       onPaste
     },
     ref
   ) => {
-    const [activeToneIdx, setActiveToneIdx] = useState<number | null>(null);
-
-    // Close active highlight on global click
-    useEffect(() => {
-      if (activeToneIdx === null) return;
-      const handleGlobalClick = () => setActiveToneIdx(null);
-      window.addEventListener('click', handleGlobalClick);
-      return () => window.removeEventListener('click', handleGlobalClick);
-    }, [activeToneIdx]);
-
     // Sync editor content with current document
     useEffect(() => {
       if (ref && 'current' in ref && ref.current) {
@@ -56,15 +59,11 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       }
     }, [currentDocId, documents, ref]);
 
-    // 0. Consistent plain-text representation for offset mapping
-    // We use a small state trick to force update when needed
     const [contentVersion, setContentVersion] = useState(0);
     
-    // Force update on resize and scroll to keep overlays aligned
     useEffect(() => {
       const handleUpdate = () => setContentVersion(v => v + 1);
       window.addEventListener('resize', handleUpdate);
-      // Use capture: true to catch scrolls on any parent container (like .napkin-canvas-wrapper)
       window.addEventListener('scroll', handleUpdate, true);
       return () => {
         window.removeEventListener('resize', handleUpdate);
@@ -73,7 +72,6 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
     }, []);
 
     useEffect(() => {
-      // Sync editor content with current document
       if (ref && 'current' in ref && ref.current) {
         const activeDoc = documents.find(d => d.id === currentDocId);
         if (activeDoc && ref.current.innerHTML !== activeDoc.content) {
@@ -86,10 +84,10 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
     const fullText = React.useMemo(() => {
       if (!ref || !('current' in ref) || !ref.current) return '';
       const editor = ref.current;
-      return editor.innerText || ''; // Simpler way to get text for matching
+      return editor.innerText || '';
     }, [contentVersion, ref]);
 
-    // 1. Selection Results (Grammarly fixed to use fullText)
+    // 1. Selection Results (Standard Overlays)
     const quillbotSentences = React.useMemo(() => {
       if (!quillbotScore?.data?.value?.chunks) return null;
       return quillbotScore.data.value.chunks.map((chunk: any) => ({
@@ -143,19 +141,19 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
       return allSentences;
     }, [fullQuillBotResults]);
 
-    // 3. Consolidated Tone Bubbles
-    const toneData = React.useMemo(() => {
-      if (!fullToneResults || !ref || !('current' in ref) || !ref.current) return null;
+    // 3. Quality Data Mapping with Heatmap Rects
+    const qualityHeatmap = React.useMemo(() => {
+      if (!fullQualityResults || !ref || !('current' in ref) || !ref.current) return null;
       const editor = ref.current;
       const textNodes: Text[] = [];
       const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
       let node;
       while ((node = walker.nextNode())) { textNodes.push(node as Text); }
 
-      return fullToneResults.map((res, i) => {
-        if (!res.tone) return null;
+      return fullQualityResults.map((res, i) => {
+        const hasQuality = res.score !== undefined || res.engagementScore !== undefined;
+        if (!hasQuality) return null;
         
-        let yCenter = 0;
         let pRects: DOMRect[] = [];
         try {
           const range = document.createRange();
@@ -171,7 +169,6 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
           for (const tNode of textNodes) {
             const nodeLen = tNode.textContent?.length || 0;
             const nodeEnd = currentLen + nodeLen;
-
             if (!startNode && nodeEnd > startOffset) {
               startNode = tNode;
               startNodeOffset = startOffset - currentLen;
@@ -187,68 +184,80 @@ export const EditorContent = forwardRef<HTMLDivElement, EditorContentProps>(
           if (startNode && endNode) {
             range.setStart(startNode, startNodeOffset);
             range.setEnd(endNode, endNodeOffset);
-            
-            const rect = range.getBoundingClientRect();
-            const editorRect = editor.getBoundingClientRect();
-            yCenter = (rect.top + rect.height / 2) - editorRect.top;
             pRects = Array.from(range.getClientRects());
-          } else {
-            return null;
-          }
+          } else return null;
         } catch (e) { return null; }
 
-        return { i, yCenter, rects: pRects, tone: res.tone };
-      });
-    }, [fullToneResults, fullText, contentVersion, ref]);
+        return { id: i, rects: pRects, scores: res };
+      }).filter(Boolean) as any[];
+    }, [fullQualityResults, fullText, contentVersion, ref]);
 
-    const activeParagraphHighlight = React.useMemo(() => {
-      if (activeToneIdx === null || !toneData || !ref || !('current' in ref) || !ref.current) return null;
-      const editor = ref.current;
-      const editorRect = editor.getBoundingClientRect();
-      const data = toneData.find(d => d?.i === activeToneIdx);
-      if (!data || !data.rects) return null;
-
-      return data.rects.map((r, idx) => (
-        <div 
-          key={idx}
-          className="absolute bg-indigo-500/5 border-b-2 border-indigo-400/20 pointer-events-none z-0"
-          style={{
-            top: r.top - editorRect.top,
-            left: r.left - editorRect.left,
-            width: r.width,
-            height: r.height,
-          }}
-        />
-      ));
-    }, [activeToneIdx, toneData, contentVersion, ref]);
+    const handleHeatmapClick = (e: React.MouseEvent, id: number, rects: DOMRect[]) => {
+      e.stopPropagation();
+      setActiveQualityId(id);
+      
+      // Calculate card position: top center of the first rect
+      if (rects.length > 0) {
+        const firstRect = rects[0];
+        setCardPos({
+          x: firstRect.left + firstRect.width / 2,
+          y: firstRect.top
+        });
+      }
+    };
 
     return (
       <div className="relative w-full">
-        <div
-          ref={ref}
-          contentEditable
-          suppressContentEditableWarning
-          className="editor-canvas"
-          onMouseUp={onSelection}
-          onInput={() => { setContentVersion(v => v + 1); onInput(); }}
-          onPaste={onPaste}
-        />
+        <div ref={ref} contentEditable suppressContentEditableWarning className="editor-canvas" onMouseUp={onSelection} onInput={() => { setContentVersion(v => v + 1); onInput(); }} onPaste={onPaste} />
 
-        {/* Overlays Container */}
         <div className="absolute inset-0 pointer-events-none overflow-visible" style={{ zIndex: 40 }}>
-          {activeParagraphHighlight}
-
-          {!isScanning && toneData?.map((data) => data && (
-            <ToneBubble 
-              key={data.i}
-              tone={data.tone}
-              yPos={data.yCenter}
-              isActive={activeToneIdx === data.i}
-              onClick={() => setActiveToneIdx(activeToneIdx === data.i ? null : data.i)}
-              onClose={() => setActiveToneIdx(null)}
-            />
+          {!isScanning && qualityHeatmap?.map((data) => (
+            <React.Fragment key={data.id}>
+              {data.rects.map((r: DOMRect, idx: number) => (
+                <div 
+                  key={`${data.id}-${idx}`}
+                  onClick={(e) => handleHeatmapClick(e, data.id, data.rects)}
+                  onMouseEnter={() => setHoveredQualityId(data.id)}
+                  onMouseLeave={() => setHoveredQualityId(null)}
+                  className={cn(
+                    "absolute pointer-events-auto cursor-pointer border-b transition-all duration-300",
+                    activeQualityId === data.id 
+                      ? "bg-indigo-500/20 border-indigo-500/40 ring-1 ring-indigo-500/10 shadow-[0_0_15px_rgba(99,102,241,0.1)]" 
+                      : hoveredQualityId === data.id
+                      ? "bg-indigo-500/15 border-indigo-400/30"
+                      : "bg-indigo-500/5 border-transparent hover:bg-indigo-500/10"
+                  )}
+                  style={{
+                    top: r.top - (ref as any).current.getBoundingClientRect().top,
+                    left: r.left - (ref as any).current.getBoundingClientRect().left,
+                    width: r.width,
+                    height: r.height,
+                    borderRadius: '2px',
+                    zIndex: (activeQualityId === data.id || hoveredQualityId === data.id) ? 10 : 1
+                  }}
+                >
+                  {/* Number marker for first rect of sentence */}
+                  {idx === 0 && (activeQualityId === data.id || hoveredQualityId === data.id) && (
+                    <div className="absolute -top-5 left-0 animate-in fade-in zoom-in-95 duration-200">
+                      <span className="bg-indigo-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm">
+                        #{data.id + 1}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </React.Fragment>
           ))}
         </div>
+
+        {activeQualityId !== null && cardPos && (
+          <QualityCard 
+            scores={qualityHeatmap?.find(d => d.id === activeQualityId)?.scores}
+            x={cardPos.x}
+            y={cardPos.y}
+            onClose={() => setActiveQualityId(null)}
+          />
+        )}
         
         {docScore?.sentences && !isScanning && (
           <ForensicOverlay color="yellow" sentences={docScore.sentences} editorRef={ref as ForwardedRef<HTMLDivElement>} contentVersion={contentVersion} />

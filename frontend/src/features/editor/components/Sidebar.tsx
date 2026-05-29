@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronLeft, Search, Plus, Trash2, MoreVertical, LayoutGrid, Clock } from 'lucide-react';
+import { 
+  ChevronLeft, Search, Plus, Trash2, LayoutGrid, Clock, 
+  SlidersHorizontal, ArrowRight, Gauge, AlertTriangle, Zap, X 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// --- MAIN DOCUMENT SIDEBAR ---
 
 export function Sidebar({
   documents,
@@ -39,7 +44,6 @@ export function Sidebar({
 
   return (
     <aside className="napkin-sidebar">
-      {/* Sidebar header */}
       <div className="px-5 pt-6 pb-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2.5 font-bold text-[#1A1A1A] tracking-tight">
@@ -59,7 +63,6 @@ export function Sidebar({
           </button>
         </div>
 
-        {/* Search */}
         <div className="relative group mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] group-focus-within:text-[#33C3FF] transition-colors" size={14} strokeWidth={3} />
           <input 
@@ -71,7 +74,6 @@ export function Sidebar({
           />
         </div>
 
-        {/* Tabs */}
         <div className="flex p-1 bg-[#F8FAFC] rounded-xl gap-1 mb-4">
           <button
             className={cn(
@@ -96,7 +98,6 @@ export function Sidebar({
         </div>
       </div>
 
-      {/* Document list */}
       <ScrollArea className="flex-1 px-3 pb-4">
         <div className="space-y-1">
           {documents.map((doc: any) => (
@@ -142,7 +143,6 @@ export function Sidebar({
         </div>
       </ScrollArea>
 
-      {/* New Document Footer */}
       <div className="p-4 border-t border-[#F1F5F9]">
         <button
           onClick={onCreate}
@@ -156,3 +156,223 @@ export function Sidebar({
   );
 }
 
+
+// --- INSPECTION PANEL ---
+
+interface SentenceResult {
+  id: number;
+  text: string;
+  offset: number;
+  scores: {
+    score: number;
+    engagementScore: number;
+    fluencyScore: number;
+    clarityScore: number;
+    deliveryScore: number;
+    unclearScore: number;
+  };
+}
+
+interface InspectionSidebarProps {
+  sentences: SentenceResult[] | null;
+  onSentenceClick: (sentence: SentenceResult) => void;
+  activeSentenceId: number | null;
+  hoveredSentenceId: number | null;
+  setHoveredSentenceId: (id: number | null) => void;
+  onClose: () => void;
+}
+
+export function InspectionSidebar({ 
+  sentences, onSentenceClick, activeSentenceId, 
+  hoveredSentenceId, setHoveredSentenceId, onClose 
+}: InspectionSidebarProps) {
+  const [useManual, setUseManual] = useState(false);
+  const [thresholds, setThresholds] = useState({
+    overall: 80,
+    engagement: 80,
+    fluency: 3,
+    clarity: 20,
+    delivery: 0
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredSentences = useMemo(() => {
+    if (!sentences) return [];
+    return sentences.filter(s => {
+      if (!s || !s.scores) return false;
+      
+      const matchesSearch = s.text.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!matchesSearch) return false;
+
+      if (!useManual) {
+        return Math.round(s.scores.score * 100) <= thresholds.overall;
+      }
+
+      return (
+        Math.round(s.scores.score * 100) <= thresholds.overall ||
+        Math.round(s.scores.engagementScore * 100) <= thresholds.engagement ||
+        Math.round(s.scores.fluencyScore * 100) <= thresholds.fluency ||
+        Math.round(s.scores.clarityScore * 100) <= thresholds.clarity ||
+        Math.round(s.scores.deliveryScore * 100) <= thresholds.delivery
+      );
+    }).sort((a, b) => (a.scores?.score || 0) - (b.scores?.score || 0));
+  }, [sentences, thresholds, searchQuery, useManual]);
+
+  const updateThreshold = (key: keyof typeof thresholds, val: number) => {
+    setThresholds(prev => ({ ...prev, [key]: val }));
+  };
+
+  if (!sentences) return null;
+
+  return (
+    <aside 
+      className="fixed right-8 top-24 w-[320px] max-h-[75vh] bg-white/95 backdrop-blur-sm flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-[60] border border-slate-200/60 animate-in zoom-in-95 slide-in-from-right-4 duration-300 ease-out"
+      style={{ borderRadius: '28px' }}
+    >
+      <div className="p-5 pb-3">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-0.5">Inspector</h3>
+            <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <SlidersHorizontal size={13} className="text-indigo-500" />
+              Quality Scan
+            </div>
+          </div>
+          <button 
+            onClick={onClose} 
+            className="w-8 h-8 flex items-center justify-center hover:bg-slate-100 rounded-full text-slate-400 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Mode Toggle */}
+        <div className="flex p-1 bg-slate-50 rounded-xl gap-1 mb-5">
+          <button
+            className={cn(
+              'flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all',
+              !useManual ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'
+            )}
+            onClick={() => setUseManual(false)}
+          >
+            Quick
+          </button>
+          <button
+            className={cn(
+              'flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all',
+              useManual ? 'bg-white text-indigo-600 shadow-sm border border-slate-100' : 'text-slate-400 hover:text-slate-600'
+            )}
+            onClick={() => setUseManual(true)}
+          >
+            Manual
+          </button>
+        </div>
+
+        {/* Threshold Sliders */}
+        <div className="space-y-4 mb-4">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-[9px] font-bold uppercase">
+              <span className="text-slate-400">Overall</span>
+              <span className="text-indigo-600">≤ {thresholds.overall}%</span>
+            </div>
+            <input 
+              type="range" min="0" max="100" 
+              value={thresholds.overall} 
+              onChange={(e) => updateThreshold('overall', parseInt(e.target.value))}
+              className="w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            />
+          </div>
+
+          {useManual && (
+            <div className="pt-3 border-t border-slate-50 space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
+              {[
+                { label: 'Engagement', key: 'engagement', color: 'accent-indigo-500' },
+                { label: 'Fluency', key: 'fluency', color: 'accent-purple-500' },
+                { label: 'Clarity', key: 'clarity', color: 'accent-blue-500' },
+                { label: 'Delivery', key: 'delivery', color: 'accent-amber-500' }
+              ].map((m) => (
+                <div key={m.key} className="space-y-1.5">
+                  <div className="flex justify-between items-center text-[8px] font-bold uppercase">
+                    <span className="text-slate-400">{m.label}</span>
+                    <span className="text-slate-600">≤ {thresholds[m.key as keyof typeof thresholds]}%</span>
+                  </div>
+                  <input 
+                    type="range" min="0" max="100" 
+                    value={thresholds[m.key as keyof typeof thresholds]} 
+                    onChange={(e) => updateThreshold(m.key as any, parseInt(e.target.value))}
+                    className={cn("w-full h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer", m.color)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="relative mb-2">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+          <input 
+            type="text" placeholder="Search flagged text..." value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-100 rounded-xl py-2 pl-9 pr-4 text-[11px] font-medium text-slate-900 focus:ring-1 focus:ring-indigo-500/20 outline-none"
+          />
+        </div>
+      </div>
+
+      {/* List */}
+      <ScrollArea className="flex-1 px-3 pb-4">
+        <div className="space-y-2">
+          {filteredSentences.map((s) => {
+            const score = Math.round(s.scores.score * 100);
+            return (
+              <div 
+                key={s.id}
+                onClick={() => onSentenceClick(s)}
+                onMouseEnter={() => setHoveredSentenceId(s.id)}
+                onMouseLeave={() => setHoveredSentenceId(null)}
+                className={cn(
+                  "p-3 rounded-2xl border transition-all cursor-pointer group relative overflow-hidden",
+                  activeSentenceId === s.id 
+                    ? "bg-white border-indigo-400 shadow-md ring-2 ring-indigo-500/5" 
+                    : hoveredSentenceId === s.id
+                    ? "bg-white border-indigo-200 shadow-sm"
+                    : "bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm"
+                )}
+              >
+                {/* Index Badge */}
+                <div className="absolute top-0 right-0 p-1">
+                  <span className="text-[8px] font-black text-slate-300 px-1.5 py-0.5">#{s.id + 1}</span>
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <div className={cn(
+                    "px-1.5 py-0.5 rounded text-[9px] font-black tracking-tight",
+                    score > 80 ? "bg-emerald-50 text-emerald-600" :
+                    score > 60 ? "bg-amber-50 text-amber-600" :
+                    "bg-red-50 text-red-600"
+                  )}>
+                    {score}%
+                  </div>
+                  {s.scores.unclearScore > 0.5 && <AlertTriangle size={11} className="text-amber-500" />}
+                </div>
+                <p className="text-[10px] text-slate-600 line-clamp-3 leading-relaxed font-medium italic">
+                  "{s.text}"
+                </p>
+              </div>
+            );
+          })}
+          {filteredSentences.length === 0 && (
+            <div className="py-12 text-center">
+              <p className="text-[10px] text-slate-400 font-medium italic">No sentences match filters.</p>
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+      
+      <div className="p-3 border-t border-slate-50 bg-slate-50/50 flex items-center justify-center">
+        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+          {filteredSentences.length} sentences flagged
+        </span>
+      </div>
+    </aside>
+  );
+}

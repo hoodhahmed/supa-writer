@@ -61,6 +61,44 @@ class QuillBotToneOutput(BaseModel):
     data: QuillBotToneData
     status: int
 
+class QualityScoreSentenceInput(BaseModel):
+    text: str
+    pre: Optional[str] = None
+    post: Optional[str] = None
+
+class QualityScoreInput(BaseModel):
+    sentences: List[QualityScoreSentenceInput]
+    tasks: List[str] = [
+        "engagement-score",
+        "fluency-score",
+        "unclear-in-context-classifier-score",
+        "raw-delivery-score",
+        "delivery-score"
+    ]
+    writingType: str = "Academic"
+    language: str = "en"
+
+class QualityScoreResult(BaseModel):
+    text: str
+    score: float
+    engagementScore: float
+    weightedDeliveryScore: float
+    deliveryScore: float
+    clarityScore: float
+    fluencyScore: float
+    unclearScore: float
+    timedOut: bool
+
+class QualityScoreData(BaseModel):
+    scores: List[QualityScoreResult]
+
+class QualityScoreOutput(BaseModel):
+    message: str
+    traceID: str
+    code: str
+    data: QualityScoreData
+    status: int
+
 class HumanizeOutput(BaseModel):
     humanizedText: str
     score: Optional[float] = None

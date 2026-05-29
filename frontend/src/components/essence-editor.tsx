@@ -10,7 +10,7 @@ import { NotebookHeader } from '@/features/editor/components/NotebookHeader';
 import { NotebookCanvas } from '@/features/editor/components/NotebookCanvas';
 import SuggestionPanel from '@/features/editor/components/SuggestionPanel';
 import { EditorContent } from '@/features/editor/components/EditorContent';
-import { Sidebar } from '@/features/editor/components/Sidebar';
+import { Sidebar, InspectionSidebar } from '@/features/editor/components/Sidebar';
 import FloatingToolbar from '@/features/editor/components/FloatingToolbar';
 
 function textToHtmlFragment(text: string) {
@@ -93,6 +93,7 @@ export function EssenceEditor() {
     setQuillbotScore(null);
     setFullGrammarlyResults(null);
     setFullQuillBotResults(null);
+    setFullQualityResults(null);
     toast("AI Cache and results cleared.", "success");
   }, [toast]);
 
@@ -101,13 +102,18 @@ export function EssenceEditor() {
   const [quillbotScore, setQuillbotScore] = useState<any | null>(null);
   const [fullGrammarlyResults, setFullGrammarlyResults] = useState<any[] | null>(null);
   const [fullQuillBotResults, setFullQuillBotResults] = useState<any[] | null>(null);
-  const [fullToneResults, setFullToneResults] = useState<any[] | null>(null);
+  const [fullQualityResults, setFullQualityResults] = useState<any[] | null>(null);
+  const [qualityScoreMode, setQualityScoreMode] = useState<'sentence' | 'paragraph'>('sentence');
   const [selectionOffset, setSelectionOffset] = useState<number>(0);
   const [isSaved, setIsSaved] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [versions, setVersions] = useState<any[]>([]);
   const [versionIndex, setVersionIndex] = useState(0);
   const [showSuggestionPanel, setShowSuggestionPanel] = useState(false);
+  const [showInspectionMode, setShowInspectionMode] = useState(false);
+  const [activeQualityId, setActiveQualityId] = useState<number | null>(null);
+  const [hoveredQualityId, setHoveredQualityId] = useState<number | null>(null);
+  const [cardPos, setCardPos] = useState<{ x: number; y: number } | null>(null);
 
   const editorRef = useRef<HTMLDivElement>(null);
   const selectionRangeRef = useRef<Range | null>(null);
@@ -295,10 +301,10 @@ export function EssenceEditor() {
 
   const handleInput = useCallback(() => {
     setIsSaved(false);
-    
+
     if (scanTimeoutRef.current) clearTimeout(scanTimeoutRef.current);
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    
+
     scanTimeoutRef.current = setTimeout(() => {
       void handleQuillBotFullScan();
       void handleGrammarlyFullScan();
@@ -310,6 +316,72 @@ export function EssenceEditor() {
     }, 1500);
   }, [currentDocId, persistDocument, handleQuillBotFullScan, handleGrammarlyFullScan]);
 
+  const handleSentenceJump = useCallback((s: any) => {
+    if (!editorRef.current) return;
+    
+    // 1. Set active state for highlighting and showing card
+    setActiveQualityId(s.id);
+
+    // Use a tiny timeout to let the DOM update (e.g. adding the card or changing highlight color)
+    setTimeout(() => {
+      if (!editorRef.current) return;
+      const editor = editorRef.current;
+      const textNodes: Text[] = [];
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
+      let node;
+      while ((node = walker.nextNode())) { textNodes.push(node as Text); }
+
+      const range = document.createRange();
+      let currentLen = 0;
+      let startNode: Node | null = null;
+      let startNodeOffset = 0;
+      let endNode: Node | null = null;
+      let endNodeOffset = 0;
+
+      for (const tNode of textNodes) {
+        const nodeLen = tNode.textContent?.length || 0;
+        if (!startNode && currentLen + nodeLen > s.offset) {
+          startNode = tNode;
+          startNodeOffset = s.offset - currentLen;
+        }
+        if (currentLen + nodeLen >= s.offset + s.text.length) {
+          endNode = tNode;
+          endNodeOffset = (s.offset + s.text.length) - currentLen;
+          break;
+        }
+        currentLen += nodeLen;
+      }
+
+      if (startNode && endNode) {
+        try {
+          range.setStart(startNode, startNodeOffset);
+          range.setEnd(endNode, endNodeOffset);
+          
+          const rect = range.getBoundingClientRect();
+          
+          // Update card position (viewport coordinates)
+          setCardPos({
+            x: rect.left + rect.width / 2,
+            y: rect.top
+          });
+
+          // Accurate scrolling
+          const container = document.querySelector('.napkin-canvas-wrapper');
+          if (container) {
+            const containerRect = container.getBoundingClientRect();
+            const relativeTop = rect.top - containerRect.top + container.scrollTop;
+            
+            container.scrollTo({
+              top: relativeTop - 200, // Move it higher so user can see context
+              behavior: 'smooth'
+            });
+          }
+        } catch (e) {
+          console.error('Failed to jump to sentence', e);
+        }
+      }
+    }, 50);
+  }, []);
   const handleScan = useCallback(async () => {
     const textToScan = editorRef.current?.innerText || "";
     if (!textToScan.trim() || textToScan.length < 5) return;
@@ -458,10 +530,48 @@ export function EssenceEditor() {
       const result = await api.humanizeText(selectedText, selectedTone);
       const humanizedText = result?.humanizedText?.trim() || selectedText;
       const wh_score = result?.score ?? null;
-      const tone_scores = result?.tone ?? null;
+
+      // Get context for quality check
+      const fullDocText = editorRef.current.innerText || "";
+      const startOfSelection = selectionOffset;
+      const endOfSelection = selectionOffset + (editorSelection?.length || 0);
+
+      let preContext = undefined;
+      if (startOfSelection > 0) {
+        const beforeText = fullDocText.substring(0, startOfSelection).trim();
+        const matches = beforeText.match(/[^.!?]+[.!?]\s*$/);
+        if (matches) preContext = matches[0].trim();
+      }
+
+      let postContext = undefined;
+      if (endOfSelection < fullDocText.length) {
+        const afterText = fullDocText.substring(endOfSelection).trim();
+        const matches = afterText.match(/^[^.!?]+[.!?]/);
+        if (matches) postContext = matches[0].trim();
+      }
+
+      // Quality Check for humanized text
+      let qualityResult = null;
+      try {
+        let payload: any[] = [];
+        if (qualityScoreMode === 'sentence') {
+          const sentences = humanizedText.split(/(?<=[.!?])\s+/).filter(Boolean);
+          payload = sentences.map((s, i) => ({
+            text: s,
+            pre: i === 0 ? preContext : sentences[i-1],
+            post: i === sentences.length - 1 ? postContext : sentences[i+1]
+          }));
+        } else {
+          payload = [{ text: humanizedText, pre: preContext, post: postContext }];
+        }
+        const qRes = await api.getQualityScore(payload);
+        qualityResult = qRes.data?.scores || null;
+      } catch (e) {
+        console.error('Quality check for humanize failed', e);
+      }
 
       setVersions((prev: any[]) => {
-        const next = [{ text: humanizedText, score: wh_score, tone: tone_scores }, ...prev];
+        const next = [{ text: humanizedText, score: wh_score, quality: qualityResult }, ...prev];
         return next.slice(0, 8);
       });
       setVersionIndex(0);
@@ -471,36 +581,102 @@ export function EssenceEditor() {
     } finally {
       setIsHumanizing(false);
     }
-  }, [editorSelection, isHumanizing, selectedTone]);
+  }, [editorSelection, isHumanizing, selectedTone, selectionOffset, qualityScoreMode]);
 
-  const handleToneCheck = useCallback(async () => {
+  const handleQualityScoreCheck = useCallback(async () => {
     const textToCheck = (editorSelection || '').trim();
-    if (!textToCheck) return;
+    if (!textToCheck || !editorRef.current) return;
 
     setIsScanning(true);
     try {
-      const result = await api.getToneAnalysis(textToCheck);
-      const tone = result.data?.averageScore;
-      if (tone) {
-        const top = Object.entries(tone).reduce((a: any, b: any) => a[1] > b[1] ? a : b);
-        toast(`Tone Detected: ${top[0].toUpperCase()} (${Math.round(top[1] * 100)}%)`, "info");
+      const fullDocText = editorRef.current.innerText || "";
+      const startOfSelection = selectionOffset;
+      const endOfSelection = selectionOffset + (editorSelection?.length || 0);
+
+      let sentencesPayload: { text: string; pre?: string; post?: string; offset: number }[] = [];
+      
+      if (qualityScoreMode === 'sentence') {
+        // Split selection into sentences
+        const splitSentences = textToCheck.split(/(?<=[.!?])\s+/).filter(Boolean);
+        
+        let currentRelativeOffset = 0;
+        sentencesPayload = splitSentences.map((s, i) => {
+          const itemOffset = startOfSelection + currentRelativeOffset;
+          
+          // Get external context from document
+          let preContext = i > 0 ? splitSentences[i-1] : undefined;
+          if (!preContext && startOfSelection > 0) {
+            const beforeText = fullDocText.substring(0, startOfSelection).trim();
+            const matches = beforeText.match(/[^.!?]+[.!?]\s*$/);
+            if (matches) preContext = matches[0].trim();
+          }
+
+          let postContext = i < splitSentences.length - 1 ? splitSentences[i+1] : undefined;
+          if (!postContext && endOfSelection < fullDocText.length) {
+            const afterText = fullDocText.substring(endOfSelection).trim();
+            const matches = afterText.match(/^[^.!?]+[.!?]/);
+            if (matches) postContext = matches[0].trim();
+          }
+
+          currentRelativeOffset += s.length + (textToCheck.substring(currentRelativeOffset + s.length).match(/^\s+/) ? textToCheck.substring(currentRelativeOffset + s.length).match(/^\s+/)![0].length : 0);
+
+          return {
+            text: s,
+            pre: preContext,
+            post: postContext,
+            offset: itemOffset
+          };
+        });
+      } else {
+        // Paragraph mode: split by newlines
+        const splitParagraphs = textToCheck.split(/\n+/).filter(Boolean);
+        let currentRelativeOffset = 0;
+        sentencesPayload = splitParagraphs.map((p, i) => {
+          const itemOffset = startOfSelection + currentRelativeOffset;
+
+          let preContext = i > 0 ? splitParagraphs[i-1] : undefined;
+          let postContext = i < splitParagraphs.length - 1 ? splitParagraphs[i+1] : undefined;
+
+          currentRelativeOffset += p.length + (textToCheck.substring(currentRelativeOffset + p.length).match(/^\n+/) ? textToCheck.substring(currentRelativeOffset + p.length).match(/^\n+/)![0].length : 0);
+
+          return {
+            text: p,
+            pre: preContext,
+            post: postContext,
+            offset: itemOffset
+          };
+        });
+      }
+
+      if (sentencesPayload.length === 0) return;
+
+      const result = await api.getQualityScore(sentencesPayload.map(({ offset, ...rest }) => rest));
+      if (result.data?.scores) {
+        // Map scores back using our calculated offsets
+        const scoresWithOffsets = result.data.scores.map((s: any, idx: number) => ({
+          ...s,
+          offset: sentencesPayload[idx].offset
+        }));
+        
+        setFullQualityResults(scoresWithOffsets);
+        toast(`Quality Check complete: ${result.data.scores.length} items analyzed.`, "success");
       }
     } catch (error) {
-      console.error('Tone check failed', error);
-      toast("Failed to analyze tone.", "error");
+      console.error('Quality Score check failed', error);
+      toast("Failed to analyze quality.", "error");
     } finally {
       setIsScanning(false);
       setToolbarPos(null);
       setEditorSelection('');
     }
-  }, [editorSelection, toast]);
+  }, [editorSelection, qualityScoreMode, selectionOffset, toast]);
 
-  const handleToneFullScan = useCallback(async () => {
+  const handleQualityFullScan = useCallback(async () => {
     if (!editorRef.current) return;
     setIsScanning(true);
     try {
       const editor = editorRef.current;
-      const paragraphs: { text: string; offset: number }[] = [];
+      const sections: { text: string; offset: number }[] = [];
       let cumulativeOffset = 0;
       const textNodes: Text[] = [];
       const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null);
@@ -510,35 +686,68 @@ export function EssenceEditor() {
 
       const blockElements = editor.querySelectorAll('p, div, blockquote');
       blockElements.forEach((el) => {
-        const text = el.textContent?.trim() || '';
-        if (text.length > 20 && !/h[1-6]/i.test(el.tagName)) {
-          const idx = fullText.indexOf(text, cumulativeOffset);
-          if (idx !== -1) {
-            paragraphs.push({ text, offset: idx });
-            cumulativeOffset = idx + text.length;
+        const blockText = el.textContent?.trim() || '';
+        const isHeading = /h[1-6]/i.test(el.tagName);
+        const isReference = blockText.toLowerCase().includes('reference') || blockText.toLowerCase().startsWith('[');
+        
+        if (blockText.length > 20 && !isHeading && !isReference) {
+          const blockIdx = fullText.indexOf(blockText, cumulativeOffset);
+          if (blockIdx !== -1) {
+            if (qualityScoreMode === 'paragraph') {
+              sections.push({ text: blockText, offset: blockIdx });
+            } else {
+              // Sentence mode: split block into sentences
+              const sentences = blockText.split(/(?<=[.!?])\s+/).filter(Boolean);
+              let relOffset = 0;
+              sentences.forEach((s) => {
+                sections.push({ text: s, offset: blockIdx + relOffset });
+                relOffset += s.length + (blockText.substring(relOffset + s.length).match(/^\s+/) ? blockText.substring(relOffset + s.length).match(/^\s+/)![0].length : 0);
+              });
+            }
+            cumulativeOffset = blockIdx + blockText.length;
           }
         }
       });
 
-      if (paragraphs.length === 0) return;
-      toast(`Analyzing tone for ${paragraphs.length} paragraphs...`, "info");
+      if (sections.length === 0) {
+        setIsScanning(false);
+        return;
+      }
+      
+      toast(`Analyzing quality for ${sections.length} ${qualityScoreMode}s...`, "info");
 
-      const results = await Promise.all(
-        paragraphs.map(async (p) => {
-          try {
-            const res = await api.getToneAnalysis(p.text);
-            return { tone: res.data?.averageScore, offset: p.offset, text: p.text };
-          } catch { return null; }
-        })
-      );
-      setFullToneResults(results.filter(Boolean));
-      toast("Tone analysis complete.", "success");
+      const payload = sections.map((s, i) => ({
+        text: s.text,
+        pre: i > 0 ? sections[i-1].text : undefined,
+        post: i < sections.length - 1 ? sections[i+1].text : undefined
+      }));
+
+      const CONCURRENCY_LIMIT = 5;
+      const allScores: any[] = [];
+
+      for (let i = 0; i < payload.length; i += CONCURRENCY_LIMIT) {
+        const chunk = payload.slice(i, i + CONCURRENCY_LIMIT);
+        try {
+          const res = await api.getQualityScore(chunk);
+          if (res.data?.scores) {
+            res.data.scores.forEach((score: any, idx: number) => {
+              allScores.push({ ...score, offset: sections[i + idx].offset });
+            });
+          }
+        } catch (e) {
+          console.error('Quality chunk scan failed', e);
+        }
+      }
+
+      setFullQualityResults(allScores);
+      setShowInspectionMode(true);
+      toast("Quality analysis complete.", "success");
     } catch (error) {
-      console.error('Tone scan failed', error);
+      console.error('Quality scan failed', error);
     } finally {
       setIsScanning(false);
     }
-  }, [toast]);
+  }, [qualityScoreMode, toast]);
 
   useEffect(() => {
     if (versions.length === 0 && showSuggestionPanel) {
@@ -608,22 +817,60 @@ export function EssenceEditor() {
 
   const regenerateVersion = useCallback(async (index: number) => {
     const base = versions[index];
-    if (!base) return;
+    if (!base || !editorRef.current) return;
     setIsHumanizing(true);
     try {
       const result = await api.humanizeText(base.text, selectedTone);
       const humanizedText = result?.humanizedText?.trim() || base.text;
       const wh_score = result?.score ?? null;
-      const tone_scores = result?.tone ?? null;
 
-      setVersions((prev: any[]) => [{ text: humanizedText, score: wh_score, tone: tone_scores }, ...prev].slice(0, 8));
+      // Get context for quality check
+      const fullDocText = editorRef.current.innerText || "";
+      const startOfSelection = selectionOffset;
+      const endOfSelection = selectionOffset + (editorSelection?.length || 0);
+
+      let preContext = undefined;
+      if (startOfSelection > 0) {
+        const beforeText = fullDocText.substring(0, startOfSelection).trim();
+        const matches = beforeText.match(/[^.!?]+[.!?]\s*$/);
+        if (matches) preContext = matches[0].trim();
+      }
+
+      let postContext = undefined;
+      if (endOfSelection < fullDocText.length) {
+        const afterText = fullDocText.substring(endOfSelection).trim();
+        const matches = afterText.match(/^[^.!?]+[.!?]/);
+        if (matches) postContext = matches[0].trim();
+      }
+
+      // Quality Check for humanized text
+      let qualityResult = null;
+      try {
+        let payload: any[] = [];
+        if (qualityScoreMode === 'sentence') {
+          const sentences = humanizedText.split(/(?<=[.!?])\s+/).filter(Boolean);
+          payload = sentences.map((s, i) => ({
+            text: s,
+            pre: i === 0 ? preContext : sentences[i-1],
+            post: i === sentences.length - 1 ? postContext : sentences[i+1]
+          }));
+        } else {
+          payload = [{ text: humanizedText, pre: preContext, post: postContext }];
+        }
+        const qRes = await api.getQualityScore(payload);
+        qualityResult = qRes.data?.scores || null;
+      } catch (e) {
+        console.error('Quality check for humanize failed', e);
+      }
+
+      setVersions((prev: any[]) => [{ text: humanizedText, score: wh_score, quality: qualityResult }, ...prev].slice(0, 8));
       setVersionIndex(0);
     } catch (e) {
       console.error('Regenerate failed', e);
     } finally {
       setIsHumanizing(false);
     }
-  }, [versions, selectedTone]);
+  }, [versions, selectedTone, selectionOffset, editorSelection, qualityScoreMode]);
 
   const prevVersion = useCallback(() => {
     setVersionIndex((i: number) => Math.max(0, i - 1));
@@ -655,8 +902,13 @@ export function EssenceEditor() {
         onScan={handleScan} 
         onQuillBotCheck={handleQuillBotFullScan}
         onGrammarlyFullScan={handleGrammarlyFullScan}
-        onToneScan={handleToneFullScan}
+        onToneScan={handleQualityFullScan}
         onResetCache={handleResetCache}
+        onToggleInspection={() => setShowInspectionMode(!showInspectionMode)}
+        showInspectionMode={showInspectionMode}
+        hasQualityData={!!fullQualityResults && fullQualityResults.length > 0}
+        qualityScoreMode={qualityScoreMode}
+        setQualityScoreMode={setQualityScoreMode}
         docScore={docScore} 
         saved={isSaved} 
       />
@@ -683,8 +935,14 @@ export function EssenceEditor() {
               quillbotScore={quillbotScore}
               fullGrammarlyResults={fullGrammarlyResults}
               fullQuillBotResults={fullQuillBotResults}
-              fullToneResults={fullToneResults}
+              fullQualityResults={fullQualityResults}
               isScanning={isScanning}
+              activeQualityId={activeQualityId}
+              setActiveQualityId={setActiveQualityId}
+              hoveredQualityId={hoveredQualityId}
+              setHoveredQualityId={setHoveredQualityId}
+              cardPos={cardPos}
+              setCardPos={setCardPos}
               onSelection={handleSelection}
               onInput={handleInput}
               onPaste={handlePaste}
@@ -698,14 +956,27 @@ export function EssenceEditor() {
               onHumanize={() => { void handleHumanize(); }}
               onGrammarlyCheck={() => { void handleGrammarlyCheck(); }}
               onQuillBotCheck={() => { void handleQuillBotCheck(); }}
-              onToneCheck={() => { void handleToneCheck(); }}
+              onToneCheck={() => { void handleQualityScoreCheck(); }}
               onTone={(tone: string) => setSelectedTone(tone)}
               selectedTone={selectedTone}
+              qualityScoreMode={qualityScoreMode}
+              setQualityScoreMode={setQualityScoreMode}
               onClose={() => { setEditorSelection(''); setToolbarPos(null); }}
               disabled={isHumanizing || isGrammarlyChecking}
             />
           ) : null}
         </main>
+
+        {showInspectionMode && (
+          <InspectionSidebar 
+            sentences={fullQualityResults?.map((s, i) => ({ id: i, text: s.text, offset: s.offset, scores: s })) || null}
+            onSentenceClick={handleSentenceJump}
+            activeSentenceId={activeQualityId}
+            hoveredSentenceId={hoveredQualityId}
+            setHoveredSentenceId={setHoveredQualityId}
+            onClose={() => setShowInspectionMode(false)}
+          />
+        )}
       </div>
 
       {showSuggestionPanel && versions.length > 0 && editorSelection && (

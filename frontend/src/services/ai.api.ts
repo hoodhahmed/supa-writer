@@ -24,5 +24,10 @@ export const aiApi = {
   getToneAnalysis: async (documentText: string) => {
     const res = await apiClient.post('/ai/tone', { documentText });
     return res.data;
+  },
+
+  getQualityScore: async (sentences: { text: string; pre?: string; post?: string }[]) => {
+    const res = await apiClient.post('/ai/quality-score', { sentences });
+    return res.data;
   }
 };

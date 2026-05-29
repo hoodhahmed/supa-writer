@@ -3,7 +3,11 @@ import re
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 from starlette.concurrency import run_in_threadpool
-from app.schemas.document import AIScoreInput, AIScoreOutput, HumanizeInput, HumanizeOutput, GrammarlyScoreOutput, QuillBotScoreOutput, QuillBotToneOutput
+from app.schemas.document import (
+    AIScoreInput, AIScoreOutput, HumanizeInput, HumanizeOutput, 
+    GrammarlyScoreOutput, QuillBotScoreOutput, QuillBotToneOutput,
+    QualityScoreInput, QualityScoreOutput
+)
 from app.core.config import settings
 from app.api.grammarly_client import grammarly_client
 from app.api.quillbot_client import quillbot_client
@@ -47,6 +51,15 @@ async def get_tone_analysis(input_data: AIScoreInput):
         return result
     except Exception as e:
         print(f"DEBUG: QuillBot Tone Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/quality-score", response_model=QualityScoreOutput)
+async def get_quality_score(input_data: QualityScoreInput):
+    try:
+        result = await run_in_threadpool(quillbot_client.get_quality_score, input_data.model_dump())
+        return result
+    except Exception as e:
+        print(f"DEBUG: QuillBot Quality Score Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 def build_fallback_ai_score(document_text: str, feedback: str) -> AIScoreOutput:

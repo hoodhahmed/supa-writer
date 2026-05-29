@@ -1,4 +1,4 @@
-import { LogOut, Plus, Sparkles, LayoutGrid, Search, RotateCcw, Sliders } from 'lucide-react';
+import { LogOut, Plus, Sparkles, LayoutGrid, Search, RotateCcw, Sliders, AlignJustify, X } from 'lucide-react';
 import { useState } from 'react';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { Link, useLocation } from 'react-router-dom';
@@ -13,12 +13,23 @@ interface NotebookHeaderProps {
   onGrammarlyFullScan?: () => void;
   onToneScan?: () => void;
   onResetCache?: () => void;
+  onToggleInspection?: () => void;
+  showInspectionMode?: boolean;
+  hasQualityData?: boolean;
+  qualityScoreMode?: 'sentence' | 'paragraph';
+  setQualityScoreMode?: (mode: 'sentence' | 'paragraph') => void;
   docScore?: any;
   saved?: boolean;
 }
 
-export function NotebookHeader({ onCreate, onScan, onQuillBotCheck, onGrammarlyFullScan, onToneScan, onResetCache, docScore, saved }: NotebookHeaderProps) {
+export function NotebookHeader({ 
+  onCreate, onScan, onQuillBotCheck, onGrammarlyFullScan, onToneScan, onResetCache, 
+  onToggleInspection, showInspectionMode, hasQualityData, 
+  qualityScoreMode, setQualityScoreMode,
+  docScore, saved 
+}: NotebookHeaderProps) {
   const [openAuth, setOpenAuth] = useState(false);
+  const [showQualityMenu, setShowQualityMenu] = useState(false);
   const { token, signout } = useAuth();
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
@@ -32,7 +43,6 @@ export function NotebookHeader({ onCreate, onScan, onQuillBotCheck, onGrammarlyF
 
   return (
     <header className="napkin-header">
-      {/* ... (logo section remains same) */}
       <div className="napkin-header-left">
         <Link to="/" className="flex items-center gap-2.5 group" title="Supa Write Home">
           <div className="bg-[#1A1A1A] p-1.5 rounded-lg group-hover:scale-110 transition-all">
@@ -44,9 +54,6 @@ export function NotebookHeader({ onCreate, onScan, onQuillBotCheck, onGrammarlyF
         </Link>
       </div>
 
-      {/* ... (nav section remains same) */}
-
-      {/* Right section: Auth/Actions */}
       <div className="napkin-header-right">
         {!isDashboard && (
           <div className="hidden lg:flex items-center gap-2 mr-4">
@@ -97,14 +104,71 @@ export function NotebookHeader({ onCreate, onScan, onQuillBotCheck, onGrammarlyF
               Grammarly Check
             </button>
 
-            <button 
-              onClick={onToneScan}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase hover:bg-indigo-100 transition-all hover:scale-105 active:scale-95"
-              title="Analyze Document Tone"
-            >
-              <Sliders size={10} strokeWidth={3} />
-              Tone Check
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setShowQualityMenu(!showQualityMenu)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-black uppercase transition-all hover:scale-105 active:scale-95",
+                  showQualityMenu ? "bg-indigo-600 text-white border-indigo-700 shadow-md" : "border-indigo-200 bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                )}
+                title="Choose Quality Check Granularity"
+              >
+                <Sliders size={10} strokeWidth={3} />
+                Quality Check
+              </button>
+
+              {showQualityMenu && (
+                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-48 bg-white border border-slate-200 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] p-2 z-[100] animate-in fade-in zoom-in-95 duration-200">
+                  <div className="px-2 py-1.5 mb-1 text-center border-b border-slate-50">
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Analysis Mode</span>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setQualityScoreMode?.('sentence');
+                      setShowQualityMenu(false);
+                      onToneScan?.();
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all",
+                      qualityScoreMode === 'sentence' ? "bg-indigo-50 text-indigo-600" : "text-slate-600 hover:bg-slate-50"
+                    )}
+                  >
+                    <LayoutGrid size={14} className={qualityScoreMode === 'sentence' ? "text-indigo-500" : "text-slate-400"} />
+                    Sentence-wise
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setQualityScoreMode?.('paragraph');
+                      setShowQualityMenu(false);
+                      onToneScan?.();
+                    }}
+                    className={cn(
+                      "w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all",
+                      qualityScoreMode === 'paragraph' ? "bg-indigo-50 text-indigo-600" : "text-slate-600 hover:bg-slate-50"
+                    )}
+                  >
+                    <AlignJustify size={14} className={qualityScoreMode === 'paragraph' ? "text-indigo-500" : "text-slate-400"} />
+                    Paragraph-wise
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {hasQualityData && (
+              <button 
+                onClick={onToggleInspection}
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] font-black uppercase transition-all hover:scale-105 active:scale-95",
+                  showInspectionMode 
+                    ? "bg-indigo-600 text-white border-indigo-700 shadow-lg shadow-indigo-200" 
+                    : "bg-white text-indigo-600 border-indigo-100"
+                )}
+                title={showInspectionMode ? "Close Inspection Sidebar" : "Open Inspection Sidebar"}
+              >
+                <LayoutGrid size={10} strokeWidth={3} />
+                {showInspectionMode ? "Close Panel" : "Inspect"}
+              </button>
+            )}
 
             <button 
               onClick={onResetCache}
